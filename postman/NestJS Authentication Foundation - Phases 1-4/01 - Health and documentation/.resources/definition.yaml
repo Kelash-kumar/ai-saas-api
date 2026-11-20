@@ -1,0 +1,3 @@
+$kind: collection
+description: Safe read-only requests; this folder can be run directly in Collection Runner.
+order: 1000

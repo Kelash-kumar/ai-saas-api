@@ -1,0 +1,22 @@
+name: NestJS Foundation - Local
+values:
+  - key: baseUrl
+    value: 'http://localhost:3000'
+  - key: origin
+    value: 'http://localhost:5173'
+  - key: email
+    value: ada@example.com
+  - key: password
+    value: ''
+  - key: resetPassword
+    value: ''
+  - key: newPassword
+    value: ''
+  - key: deviceName
+    value: Postman desktop
+  - key: verificationToken
+    value: ''
+  - key: resetToken
+    value: ''
+  - key: activationToken
+    value: ''

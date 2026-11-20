@@ -1,0 +1,3 @@
+$kind: collection
+description: Forgot is generic. Obtain resetToken from mail/private preview. Reset uses resetPassword; authenticated change uses newPassword. Success updates password for later logins and clears client bearer/CSRF state.
+order: 5000

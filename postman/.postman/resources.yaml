@@ -1,0 +1,10 @@
+# Use this workspace to collaborate
+workspace:
+  id: ''
+
+localResources:
+  collections:
+    - ../NestJS Authentication Foundation - Phases 1-4
+  environments:
+    - ../Local.postman_environment.json
+    - ../NestJS Foundation - Local.environment.yaml

@@ -1,0 +1,25 @@
+$kind: collection
+description: 'Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing.'
+variables:
+  baseUrl: http://localhost:3000
+  origin: http://localhost:5173
+  email: ada@example.com
+  password: ''
+  resetPassword: ''
+  newPassword: ''
+  deviceName: Postman desktop
+  verificationToken: ''
+  resetToken: ''
+  activationToken: ''
+  accessToken: ''
+  csrfToken: ''
+  sessionId: ''
+  targetSessionId: ''
+  sessionIds: ''
+  forbiddenUserType: administrator
+auth:
+  - id: 411c1c72-fb24-4e69-8c83-64e6fd122aa1
+    type: bearer
+    name: bearer auth
+    credentials:
+      token: '{{accessToken}}'

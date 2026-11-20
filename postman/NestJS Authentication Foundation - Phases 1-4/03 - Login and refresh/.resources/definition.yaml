@@ -1,0 +1,3 @@
+$kind: collection
+description: Login saves bearer/CSRF/session variables. Keep the cookie jar enabled. Refresh automatically replaces both tokens; serialize refresh across requests/tabs.
+order: 3000

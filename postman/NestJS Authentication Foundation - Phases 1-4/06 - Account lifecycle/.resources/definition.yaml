@@ -1,0 +1,3 @@
+$kind: collection
+description: Only self-deactivated verified accounts can use email reactivation. Administrative blocks cannot be overridden. Deactivation requires current password; activation requires fresh login afterward.
+order: 6000

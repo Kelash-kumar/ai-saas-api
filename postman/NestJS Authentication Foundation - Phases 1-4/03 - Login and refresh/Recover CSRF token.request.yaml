@@ -1,0 +1,26 @@
+$kind: http-request
+description: Uses the refresh cookie and permitted Origin after a client reload; does not need an access token.
+url: '{{baseUrl}}/api/v1/auth/csrf'
+method: POST
+headers:
+  Accept: application/json
+  Origin: '{{origin}}'
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 200', function () { pm.response.to.have.status(200); });
+      pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });
+      function setInput(key, value) {
+        if (pm.environment.has(key)) pm.environment.set(key, value);
+        else pm.collectionVariables.set(key, value);
+      }
+      function clearSession() {
+        ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));
+      }
+      if (pm.response.code === 200) {
+      const token = pm.response.json().data.csrfToken; pm.test('Valid CSRF token', function () { pm.expect(token).to.match(/^[A-Za-z0-9_-]{43}$/); }); pm.collectionVariables.set('csrfToken', token);
+      }
+    language: text/javascript
+order: 3000

@@ -1,0 +1,24 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/docs/openapi.json'
+method: GET
+headers:
+  Accept: application/json
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 200', function () { pm.response.to.have.status(200); });
+      function setInput(key, value) {
+        if (pm.environment.has(key)) pm.environment.set(key, value);
+        else pm.collectionVariables.set(key, value);
+      }
+      function clearSession() {
+        ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));
+      }
+      if (pm.response.code === 200) {
+      pm.test('Implemented authentication is documented', function () { pm.expect(pm.response.json().paths).to.have.property('/api/v1/auth/reset-password'); });
+      }
+    language: text/javascript
+order: 3000

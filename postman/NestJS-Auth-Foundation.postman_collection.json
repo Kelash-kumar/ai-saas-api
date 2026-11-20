@@ -1,0 +1,2550 @@
+{
+  "info": {
+    "_postman_id": "a0a60047-d919-4be9-93c2-81059180e1d2",
+    "name": "NestJS Authentication Foundation - Phases 1-5",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "0.5.0",
+    "description": "Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing. Phase 5 management requests require explicit operator bootstrap of an existing active verified account. New catalog permissions grant nothing automatically. Management variables must target disposable identities/roles deliberately. See docs/phase-05.md."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{accessToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "origin",
+      "value": "http://localhost:5173",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "ada@example.com",
+      "type": "string"
+    },
+    {
+      "key": "password",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resetPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "newPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "deviceName",
+      "value": "Postman desktop",
+      "type": "string"
+    },
+    {
+      "key": "verificationToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "resetToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "activationToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "accessToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "csrfToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "targetSessionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sessionIds",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "forbiddenUserType",
+      "value": "administrator",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "permissionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "targetUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "inheritedRoleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "roleName",
+      "value": "postman-role",
+      "type": "string"
+    },
+    {
+      "key": "roleDescription",
+      "value": "Postman managed role",
+      "type": "string"
+    },
+    {
+      "key": "permissionResource",
+      "value": "reports",
+      "type": "string"
+    },
+    {
+      "key": "permissionAction",
+      "value": "view",
+      "type": "string"
+    },
+    {
+      "key": "managedStatus",
+      "value": "inactive",
+      "type": "string"
+    },
+    {
+      "key": "managedUserIds",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Health and documentation",
+      "description": "Safe read-only requests; this folder can be run directly in Collection Runner.",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/health/live",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "pm.test('Process is live', function () { pm.expect(pm.response.json().status).to.eql('ok'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Readiness",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/health/ready",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "pm.test('Database and application ready', function () { const data = pm.response.json(); pm.expect(data.status).to.eql('ok'); pm.expect(data.info.database.status).to.eql('up'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "OpenAPI document",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/docs/openapi.json",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "pm.test('Implemented authentication is documented', function () { pm.expect(pm.response.json().paths).to.have.property('/api/v1/auth/reset-password'); });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Registration and verification",
+      "description": "Register, obtain the verification token from mail/private preview, set verificationToken, then verify. Resend is optional and has a persistent 60-second cooldown.",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "description": "Creates only a customer identity. Returns the same accepted message for an existing address. No token is returned.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\",\"password\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\"), \"password\": pm.variables.get(\"password\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () { pm.response.to.have.status(202); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 202) {",
+                  "pm.test('Generic accepted response', function () {",
+                  "  const body = pm.response.json(); pm.expect(body.success).to.eql(true); pm.expect(body.data.message).to.be.a('string');",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Request verification email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/verification/request",
+            "description": "Optional resend. At most one verification token per recipient per minute.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () { pm.response.to.have.status(202); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 202) {",
+                  "pm.test('Generic accepted response', function () {",
+                  "  const body = pm.response.json(); pm.expect(body.success).to.eql(true); pm.expect(body.data.message).to.be.a('string');",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Verify email",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/verify-email",
+            "description": "Paste the 43-character token from mail or npm run auth:preview -- <email>. Token is consumed once.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{verificationToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"verificationToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"token\": pm.variables.get(\"verificationToken\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "setInput('verificationToken', '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Login and refresh",
+      "description": "Login saves bearer/CSRF/session variables. Keep the cookie jar enabled. Refresh automatically replaces both tokens; serialize refresh across requests/tabs.",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"deviceName\": \"{{deviceName}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\",\"password\",\"deviceName\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\"), \"password\": pm.variables.get(\"password\"), \"deviceName\": pm.variables.get(\"deviceName\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Credentials match the response contract', function () {",
+                  "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(data.csrfToken).to.match(/^[A-Za-z0-9_-]{43}$/);",
+                  "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
+                  "  pm.expect(data.expiresIn).to.be.above(0);",
+                  "  pm.expect(data).not.to.have.property('refreshToken');",
+                  "});",
+                  "pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "pm.collectionVariables.set('csrfToken', data.csrfToken);",
+                  "pm.collectionVariables.set('sessionId', data.sessionId);",
+                  "pm.test('HttpOnly refresh cookie issued', function () {",
+                  "  const cookies = pm.response.headers.all().filter(header => header.key.toLowerCase() === 'set-cookie');",
+                  "  pm.expect(cookies.some(header => /(?:__Host-)?foundation_refresh=/.test(header.value) && /HttpOnly/i.test(header.value))).to.eql(true);",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json().data; pm.test('Current owned identity', function () { pm.expect(data.email).to.eql(pm.variables.get('email').trim().toLowerCase()); pm.expect(data.sessionId).to.eql(pm.collectionVariables.get('sessionId')); });",
+                  "}",
+                  "if(pm.response.code===200)pm.collectionVariables.set('userId',pm.response.json().data.userId);"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Recover CSRF token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/csrf",
+            "description": "Uses the refresh cookie and permitted Origin after a client reload; does not need an access token.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "const token = pm.response.json().data.csrfToken; pm.test('Valid CSRF token', function () { pm.expect(token).to.match(/^[A-Za-z0-9_-]{43}$/); }); pm.collectionVariables.set('csrfToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Refresh tokens",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/refresh",
+            "description": "Requires current refresh cookie and current CSRF token. Reusing the previous refresh token revokes its whole session.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"csrfToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "const data = pm.response.json().data;",
+                  "pm.test('Credentials match the response contract', function () {",
+                  "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
+                  "  pm.expect(data.csrfToken).to.match(/^[A-Za-z0-9_-]{43}$/);",
+                  "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
+                  "  pm.expect(data.expiresIn).to.be.above(0);",
+                  "  pm.expect(data).not.to.have.property('refreshToken');",
+                  "});",
+                  "pm.collectionVariables.set('accessToken', data.accessToken);",
+                  "pm.collectionVariables.set('csrfToken', data.csrfToken);",
+                  "pm.collectionVariables.set('sessionId', data.sessionId);",
+                  "pm.test('HttpOnly refresh cookie issued', function () {",
+                  "  const cookies = pm.response.headers.all().filter(header => header.key.toLowerCase() === 'set-cookie');",
+                  "  pm.expect(cookies.some(header => /(?:__Host-)?foundation_refresh=/.test(header.value) && /HttpOnly/i.test(header.value))).to.eql(true);",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Device sessions",
+      "description": "Login twice to create two sessions, then list. The list script selects another active session for revocation; it never automatically selects your current one.",
+      "item": [
+        {
+          "name": "List sessions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/sessions?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 200) {",
+                  "const body = pm.response.json();",
+                  "pm.test('Paginated safe session summaries', function () { pm.expect(body.data).to.be.an('array'); pm.expect(body.meta).to.have.property('total'); pm.expect(JSON.stringify(body)).not.to.match(/passwordHash|tokenDigest|userAgent|ipAddress/); });",
+                  "pm.collectionVariables.set('sessionIds', JSON.stringify(body.data.map(row => row.id)));",
+                  "const other = body.data.find(row => row.id !== pm.collectionVariables.get('sessionId') && !row.revokedAt && Date.parse(row.expiresAt) > Date.now());",
+                  "pm.collectionVariables.set('targetSessionId', other ? other.id : '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Revoke selected session",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/sessions/{{targetSessionId}}",
+            "description": "Owned sessions only. If there is no second active session, create another login before listing again. Set targetSessionId manually only when intentionally revoking that owned session."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"targetSessionId\",\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "if (pm.variables.get('targetSessionId') === pm.collectionVariables.get('sessionId')) clearSession(); pm.collectionVariables.unset('targetSessionId');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Password recovery and change",
+      "description": "Forgot is generic. Obtain resetToken from mail/private preview. Reset uses resetPassword; authenticated change uses newPassword. Success updates password for later logins and clears client bearer/CSRF state.",
+      "item": [
+        {
+          "name": "Forgot password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/forgot-password",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () { pm.response.to.have.status(202); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 202) {",
+                  "pm.test('Generic accepted response', function () {",
+                  "  const body = pm.response.json(); pm.expect(body.success).to.eql(true); pm.expect(body.data.message).to.be.a('string');",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Reset password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/reset-password",
+            "description": "Single-use reset, no automatic login. All existing sessions are revoked. Set resetPassword to the desired 15–128 character password before sending.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"newPassword\": \"{{resetPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"resetToken\",\"resetPassword\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"token\": pm.variables.get(\"resetToken\"), \"newPassword\": pm.variables.get(\"resetPassword\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "setInput('password', pm.variables.get('resetPassword')); setInput('resetToken', ''); clearSession();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Change password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/change-password",
+            "description": "Requires a current valid bearer session and current password. Set newPassword different from password. All sessions, including the caller, are revoked.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{newPassword}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"password\",\"newPassword\",\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"currentPassword\": pm.variables.get(\"password\"), \"newPassword\": pm.variables.get(\"newPassword\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "setInput('password', pm.variables.get('newPassword')); clearSession();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Account lifecycle",
+      "description": "Only self-deactivated verified accounts can use email reactivation. Administrative blocks cannot be overridden. Deactivation requires current password; activation requires fresh login afterward.",
+      "item": [
+        {
+          "name": "Deactivate my account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/deactivate",
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"password\",\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"currentPassword\": pm.variables.get(\"password\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "clearSession();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Request account activation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/activation/request",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 202', function () { pm.response.to.have.status(202); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 202) {",
+                  "pm.test('Generic accepted response', function () {",
+                  "  const body = pm.response.json(); pm.expect(body.success).to.eql(true); pm.expect(body.data.message).to.be.a('string');",
+                  "});",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Activate account",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/activate",
+            "description": "Obtain activationToken using mail or npm run auth:recovery-preview -- <email> account_activation. Previously revoked sessions remain revoked.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{activationToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"activationToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"token\": pm.variables.get(\"activationToken\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "setInput('activationToken', '');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - Sign out",
+      "item": [
+        {
+          "name": "Logout current cookie session",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrfToken}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/logout",
+            "description": "Cookie + Origin + CSRF. An access JWT is not required. Cookie jar processes the clearing Set-Cookie response.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"csrfToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "clearSession();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Logout all sessions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/logout-all",
+            "description": "Bearer + Origin; revokes every session for this account and clears the refresh cookie."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"accessToken\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+                  "pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
+                  "function setInput(key, value) {",
+                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
+                  "  else pm.collectionVariables.set(key, value);",
+                  "}",
+                  "function clearSession() {",
+                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
+                  "}",
+                  "if (pm.response.code === 204) {",
+                  "clearSession();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - Safe negative checks",
+      "description": "Each request intentionally expects a 4xx response. They do not perform refresh replay, account lockout or permanent data deletion.",
+      "item": [
+        {
+          "name": "Missing bearer is rejected",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/me",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', function () { pm.response.to.have.status(401); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Untrusted origin is rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "https://untrusted.example.test"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/csrf",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', function () { pm.response.to.have.status(403); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Invalid login types are rejected",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "description": "",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": {\n    \"invalid\": true\n  },\n  \"password\": {\n    \"invalid\": true\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Registration cannot assign administrator type",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/register",
+            "description": "The server must reject the unknown userType property, rather than accepting privilege assignment.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"userType\": \"{{forbiddenUserType}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const required = [\"email\",\"password\",\"forbiddenUserType\"];",
+                  "for (const key of required) {",
+                  "  const value = pm.variables.get(key);",
+                  "  if (typeof value !== 'string' || value.length === 0) {",
+                  "    if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();",
+                  "    throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');",
+                  "  }",
+                  "}",
+                  "pm.request.body.update(JSON.stringify({\"email\": pm.variables.get(\"email\"), \"password\": pm.variables.get(\"password\"), \"userType\": pm.variables.get(\"forbiddenUserType\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "09 - Authorization and administration",
+      "description": "Authenticate and bootstrap the actor through authorization:bootstrap first. These are privileged, stateful requests; do not Run All. New permission definitions grant nobody authority until a trusted operator authorizes the first grant. Set targetUserId deliberately; scripts never auto-select your current account for suspension. Names are immutable after role creation.",
+      "item": [
+        {
+          "name": "My effective authority",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/me",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){pm.test('Effective roles and permissions',function(){const a=pm.response.json().data;pm.expect(a.roles).to.be.an('array');pm.expect(a.permissions).to.be.an('array');});}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "List roles",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/roles?page=1&limit=20&sortBy=name&sortOrder=asc",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){const data=pm.response.json().data; const selected=data.find(row=>row.name===pm.variables.get('roleName'));if(selected)pm.collectionVariables.set('roleId',selected.id);}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create role",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/roles",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Requires roles.create and roles.delegate. Starts empty and does not add memberships.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{roleName}}\",\n  \"description\": \"{{roleDescription}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleName\",\"roleDescription\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }",
+                  "pm.request.body.update(JSON.stringify({\"name\":pm.variables.get(\"roleName\"),\"description\":pm.variables.get(\"roleDescription\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){pm.response.to.have.status(201);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===201){pm.collectionVariables.set('roleId',pm.response.json().data.id);}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Role details",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Update role description",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Names cannot be renamed; description only.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"{{roleDescription}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\",\"roleDescription\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }",
+                  "pm.request.body.update(JSON.stringify({\"description\":pm.variables.get(\"roleDescription\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Delete role",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": "Checks all impacted users/inheriting roles and last-manager protection. Use a disposable test role."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){pm.collectionVariables.unset('roleId');}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "List permissions",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/permissions?page=1&limit=100&sortBy=name&sortOrder=asc",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){const name=pm.variables.get('permissionResource')+'.'+pm.variables.get('permissionAction');const selected=pm.response.json().data.find(row=>row.name===name);if(selected)pm.collectionVariables.set('permissionId',selected.id);}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Create permission definition",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/permissions",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Creates a definition only. Grant its name explicitly to the manager with authorization:grant before assigning it.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"resource\": \"{{permissionResource}}\",\n  \"action\": \"{{permissionAction}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"permissionResource\",\"permissionAction\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }",
+                  "pm.request.body.update(JSON.stringify({\"resource\":pm.variables.get(\"permissionResource\"),\"action\":pm.variables.get(\"permissionAction\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',function(){pm.response.to.have.status(201);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===201){pm.collectionVariables.set('permissionId',pm.response.json().data.id);}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Grant permission to role",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}/permissions/{{permissionId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\",\"permissionId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Revoke permission from role",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}/permissions/{{permissionId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\",\"permissionId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Add inherited role",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}/inherits/{{inheritedRoleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": "The selected role inherits the target role. A cycle returns 400."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\",\"inheritedRoleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Remove inherited role",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/authorization/roles/{{roleId}}/inherits/{{inheritedRoleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"roleId\",\"inheritedRoleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "List managed users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/users?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){const users=pm.response.json().data;pm.collectionVariables.set('managedUserIds',JSON.stringify(users.map(row=>row.id)));pm.test('No credential fields',function(){pm.expect(JSON.stringify(users)).not.to.match(/passwordHash|password_hash|tokenDigest/);});}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Selected user authority",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/authority",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',function(){pm.response.to.have.status(200);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Assign role to user",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/roles/{{roleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\",\"roleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Remove role from user",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/roles/{{roleId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\",\"roleId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Grant direct user permission",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/permissions/{{permissionId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\",\"permissionId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Revoke direct user permission",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/permissions/{{permissionId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": "The user may still hold the permission through a role or inheritance."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\",\"permissionId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Set administrative user status",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/status",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "description": "Set managedStatus to inactive or active. Revokes sessions/recovery tokens, preserves password lockout. Administrative blocks cannot be self-reactivated.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"{{managedStatus}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\",\"managedStatus\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }",
+                  "pm.request.body.update(JSON.stringify({\"status\":pm.variables.get(\"managedStatus\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Administratively unlock user",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/authorization/users/{{targetUserId}}/unlock",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ],
+            "description": "Clears lock/failure counters and revokes sessions. Requires users.unlock independently of status permission."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"targetUserId\"]) { const value=pm.variables.get(key); if(typeof value!=='string'||!value.length){ if(pm.execution && typeof pm.execution.skipRequest==='function')pm.execution.skipRequest(); throw new Error('Set '+key+' first; see docs/phase-05.md and bootstrap instructions.'); } }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',function(){pm.response.to.have.status(204);});",
+                  "pm.test('Management response is not cached',function(){pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store');});",
+                  "pm.test('Empty body',function(){pm.expect(pm.response.text()).to.eql('');});",
+                  "if(pm.response.code===204){}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+$kind: collection
+description: Register, obtain the verification token from mail/private preview, set verificationToken, then verify. Resend is optional and has a persistent 60-second cooldown.
+order: 2000

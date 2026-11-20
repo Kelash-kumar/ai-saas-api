@@ -1,0 +1,37 @@
+$kind: http-request
+description: The server must reject the unknown userType property, rather than accepting privilege assignment.
+url: '{{baseUrl}}/api/v1/auth/register'
+method: POST
+headers:
+  Accept: application/json
+  Origin: '{{origin}}'
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "{{email}}",
+      "password": "{{password}}",
+      "userType": "{{forbiddenUserType}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: |-
+      const required = ["email","password","forbiddenUserType"];
+      for (const key of required) {
+        const value = pm.variables.get(key);
+        if (typeof value !== 'string' || value.length === 0) {
+          if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();
+          throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');
+        }
+      }
+      pm.request.body.update(JSON.stringify({"email": pm.variables.get("email"), "password": pm.variables.get("password"), "userType": pm.variables.get("forbiddenUserType")}));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 400', function () { pm.response.to.have.status(400); });
+      pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });
+    language: text/javascript
+order: 4000

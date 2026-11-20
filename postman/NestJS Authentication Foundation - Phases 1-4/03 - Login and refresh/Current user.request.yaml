@@ -1,0 +1,34 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/api/v1/auth/me'
+method: GET
+headers:
+  Accept: application/json
+scripts:
+  - type: beforeRequest
+    code: |-
+      const required = ["accessToken"];
+      for (const key of required) {
+        const value = pm.variables.get(key);
+        if (typeof value !== 'string' || value.length === 0) {
+          if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();
+          throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');
+        }
+      }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 200', function () { pm.response.to.have.status(200); });
+      pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });
+      function setInput(key, value) {
+        if (pm.environment.has(key)) pm.environment.set(key, value);
+        else pm.collectionVariables.set(key, value);
+      }
+      function clearSession() {
+        ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));
+      }
+      if (pm.response.code === 200) {
+      const data = pm.response.json().data; pm.test('Current owned identity', function () { pm.expect(data.email).to.eql(pm.variables.get('email').trim().toLowerCase()); pm.expect(data.sessionId).to.eql(pm.collectionVariables.get('sessionId')); });
+      }
+    language: text/javascript
+order: 2000

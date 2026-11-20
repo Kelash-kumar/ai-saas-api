@@ -1,0 +1,28 @@
+$kind: http-request
+description: ''
+url: '{{baseUrl}}/api/v1/auth/login'
+method: POST
+headers:
+  Accept: application/json
+  Origin: '{{origin}}'
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": {
+        "invalid": true
+      },
+      "password": {
+        "invalid": true
+      }
+    }
+auth:
+  type: noauth
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 400', function () { pm.response.to.have.status(400); });
+      pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });
+    language: text/javascript
+order: 3000

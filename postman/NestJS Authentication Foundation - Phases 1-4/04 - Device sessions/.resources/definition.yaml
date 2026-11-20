@@ -1,0 +1,3 @@
+$kind: collection
+description: Login twice to create two sessions, then list. The list script selects another active session for revocation; it never automatically selects your current one.
+order: 4000

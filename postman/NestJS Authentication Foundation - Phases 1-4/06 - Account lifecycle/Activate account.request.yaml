@@ -1,0 +1,46 @@
+$kind: http-request
+description: Obtain activationToken using mail or npm run auth:recovery-preview -- <email> account_activation. Previously revoked sessions remain revoked.
+url: '{{baseUrl}}/api/v1/auth/activate'
+method: POST
+headers:
+  Accept: application/json
+  Origin: '{{origin}}'
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "token": "{{activationToken}}"
+    }
+auth:
+  type: noauth
+scripts:
+  - type: beforeRequest
+    code: |-
+      const required = ["activationToken"];
+      for (const key of required) {
+        const value = pm.variables.get(key);
+        if (typeof value !== 'string' || value.length === 0) {
+          if (pm.execution && typeof pm.execution.skipRequest === 'function') pm.execution.skipRequest();
+          throw new Error('Set '+key+' first. See docs/WORKING-GUIDE.md; obtain mail tokens through mail or the private preview commands.');
+        }
+      }
+      pm.request.body.update(JSON.stringify({"token": pm.variables.get("activationToken")}));
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      pm.test('HTTP 204', function () { pm.response.to.have.status(204); });
+      pm.test('Empty response body', function () { pm.expect(pm.response.text()).to.eql(''); });
+      pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });
+      function setInput(key, value) {
+        if (pm.environment.has(key)) pm.environment.set(key, value);
+        else pm.collectionVariables.set(key, value);
+      }
+      function clearSession() {
+        ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));
+      }
+      if (pm.response.code === 204) {
+      setInput('activationToken', '');
+      }
+    language: text/javascript
+order: 3000
