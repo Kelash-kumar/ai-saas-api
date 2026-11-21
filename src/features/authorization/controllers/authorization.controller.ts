@@ -23,6 +23,7 @@ import { AuthorizationService } from '../services/authorization.service';
 import { AdministrationService } from '../services/administration.service';
 import {
   AuthorityDto,
+  UserAuthorityDto,
   CreatePermissionDto,
   CreateRoleDto,
   RoleDescriptionDto,
@@ -157,7 +158,7 @@ export class AuthorizationController {
   }
   @Get('users/:userId/authority')
   @Permissions('users.read')
-  @ApiSuccess(AuthorityDto)
+  @ApiSuccess(UserAuthorityDto)
   userAuthority(@Param('userId', uuid()) userId: string) {
     return this.authorization.userAuthority(userId);
   }

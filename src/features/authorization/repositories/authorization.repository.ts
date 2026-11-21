@@ -140,6 +140,17 @@ export class AuthorizationRepository {
     if (!row) throw new NotFoundException('User not found');
     return row;
   }
+
+  async directUserGrants(userId: string) {
+    const [roles, permissions] = await Promise.all([
+      this.manager.getRepository(UserRoleEntity).findBy({ userId }),
+      this.manager.getRepository(UserPermissionEntity).findBy({ userId }),
+    ]);
+    return {
+      directRoleIds: roles.map((row) => row.roleId).sort(),
+      directPermissionIds: permissions.map((row) => row.permissionId).sort(),
+    };
+  }
   roles(query: PageQueryDto) {
     return new RolesRepository(this.manager).paginate(
       query,

@@ -16,6 +16,7 @@ import type {
 import type { UserEntity } from '../../users/entities/user.entity';
 import type { SessionEntity } from '../../sessions/entities/session.entity';
 import type { PageQueryDto } from '../../../common/pagination/page-query.dto';
+import { AuthorizationRepository } from '../../authorization/repositories/authorization.repository';
 
 function eligible(user: UserEntity | null, at: Date): user is UserEntity {
   return (
@@ -57,15 +58,23 @@ export class SessionAuthService {
     };
   }
 
-  async login(identity: LoginIdentity, device: ClientDevice): Promise<IssuedCredentials> {
+  async login(
+    identity: LoginIdentity,
+    device: ClientDevice,
+    adminPortal = false,
+  ): Promise<IssuedCredentials> {
     const { userId } = identity;
     const credentials = await this.work.run(async (scope) => {
       const repository = scope.get(AuthenticationRepository);
+      const policy = scope.get(AuthorizationRepository);
+      if (adminPortal) await policy.lockPolicy();
       const user = await repository.lockUser(userId);
       if (
         !eligible(user, new Date()) ||
         tokenDigest(user.passwordHash) !== identity.credentialStamp
       )
+        return null;
+      if (adminPortal && !(await policy.userAuthority(userId)).permissions.includes('admin.access'))
         return null;
       const session = await repository.createSession(
         userId,

@@ -64,6 +64,10 @@ export class PermissionViewDto {
   @ApiProperty({ type: String, format: 'date-time' }) createdAt!: Date;
   @ApiProperty({ type: String, format: 'date-time' }) updatedAt!: Date;
 }
+export class UserAuthorityDto extends AuthorityDto {
+  @ApiProperty({ type: [String] }) directRoleIds!: string[];
+  @ApiProperty({ type: [String] }) directPermissionIds!: string[];
+}
 export class ManagedUserDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() email!: string;

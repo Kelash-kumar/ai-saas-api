@@ -27,6 +27,7 @@ npm ci --ignore-scripts
 npm run auth:keys
 npm run db:local
 npm run db:migrate
+npm run db:seed
 npm run db:status
 npm run db:schema-check
 npm run start:dev
@@ -106,7 +107,7 @@ Edit `.env` from the project root, never a generated `dist` file. Restart API/wo
 | `HOST`, `PORT`                                          | API binding, default `127.0.0.1:3000`. Use `0.0.0.0` deliberately for container/network ingress.                                                |
 | `APP_NAME`, `LOG_LEVEL`                                 | Service label and structured log verbosity.                                                                                                     |
 | `SWAGGER_ENABLED`                                       | Example enables docs; absent/false disables them.                                                                                               |
-| `CORS_ORIGINS`                                          | Comma-separated exact frontend origins; example `http://localhost:5173`. No wildcard, path or trailing slash. Production origins require HTTPS. |
+| `CORS_ORIGINS`                                          | Comma-separated exact frontend origins; example `http://localhost:3001`. No wildcard, path or trailing slash. Production origins require HTTPS. |
 | `RATE_LIMIT_TTL_MS`, `RATE_LIMIT_MAX`                   | Global per-route/IP throttle window and limit; auth endpoints have stricter overrides.                                                          |
 | `SHUTDOWN_TIMEOUT_MS`                                   | Terminus graceful shutdown delay; not an overall process kill deadline.                                                                         |
 | `DATABASE_HOST`, `DATABASE_PORT`                        | PostgreSQL host/port, default loopback/55432.                                                                                                   |
@@ -129,13 +130,13 @@ Edit `.env` from the project root, never a generated `dist` file. Restart API/wo
 | `MAIL_TIMEOUT_MS`, `MAIL_LEASE_MS`                      | SMTP stage timeout and worker lease; defaults 5000 and 60000 ms. Lease must exceed the validated delivery budget.                               |
 | `MAIL_MAX_ATTEMPTS`, `MAIL_POLL_MS`                     | Durable attempt limit and worker polling; defaults 5 and 1000 ms.                                                                               |
 
-`MAIL_PUBLIC_URL` points to the frontend that will consume emailed token fragments and POST JSON to this API. The backend does not implement those frontend pages. For local manual testing use Postman and the preview commands below.
+`MAIL_PUBLIC_URL` points to the frontend that will consume emailed token fragments and POST JSON to this API. The sibling Next.js application at E:\nestjs-auth-admin implements email verification and the shared dashboard. Use MAIL_PUBLIC_URL=http://localhost:3001 locally. Recovery endpoints remain available through Postman.
 
 ## 5. Import Postman
 
 Import these files through Postman's **Import** action:
 
-1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 54 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
+1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 55 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
 2. [Local.postman_environment.json](../postman/Local.postman_environment.json) — optional local input environment.
 
 Select **NestJS Foundation - Local** if using the supplied environment. The collection also works without an environment: set its variables directly. Configure these input values locally:
@@ -143,7 +144,7 @@ Select **NestJS Foundation - Local** if using the supplied environment. The coll
 | Variable                                             | What to enter                                                                                                                             |
 | ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `baseUrl`                                            | `http://localhost:3000`, without trailing slash or `/api/v1`.                                                                             |
-| `origin`                                             | An exact value from `CORS_ORIGINS`, normally `http://localhost:5173`. This is the simulated frontend origin, not necessarily the API URL. |
+| `origin`                                             | An exact value from `CORS_ORIGINS`, normally `http://localhost:3001`. This is the simulated frontend origin, not necessarily the API URL. |
 | `email`                                              | An address for a disposable local test account, e.g. `ada@example.com`. Use your own address when actually sending SMTP mail.             |
 | `password`                                           | Initial/current 15–128 character password. No password is shipped.                                                                        |
 | `resetPassword`                                      | A different password to use in the reset walkthrough.                                                                                     |
@@ -332,7 +333,7 @@ npm run db:schema-check
 npm audit
 ```
 
-Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 150 tests: 63 unit/infrastructure and 87 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. The user/company extension adds the fifth migration; apply it before using this version.
+Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 156 tests: 63 unit/infrastructure and 93 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. The user/company extension adds the fifth migration; apply it before using this version.
 
 For compiled startup:
 
@@ -383,3 +384,11 @@ Keep `.env`, private captures/previews and Postman runtime values out of shared 
 This guide and collection are checked against the implemented controllers/configuration. The collection uses the official [Postman Collection v2.1 schema](https://schema.postman.com/json/collection/v2.1.0/collection.json) and documented [Postman Sandbox APIs](https://learning.postman.com/docs/tests-and-scripts/postman-sandbox-reference/overview/). Its requests/scripts are exercised against a compiled server and an owned disposable PostgreSQL database; exported files remain blank of secrets.
 
 Local verification uses Windows, installed PostgreSQL 17 and file/local SMTP capture. Docker and an external SMTP provider are documented alternatives, not externally provisioned services. Production still needs reviewed ingress/proxy policy, separate roles/secrets/backups, shared throttling, retention/key rotation and deployment/load validation. See [the roadmap](roadmap.md) for Phase 6.
+
+## Unified Next.js admin integration
+
+Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
+
+Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
+
+Allow the frontend origin in CORS_ORIGINS and configure MAIL_PUBLIC_URL for verification links. Production HTTPS uses __Host-foundation_refresh; set the same API_REFRESH_COOKIE_NAME in the frontend. Tokens are held by same-origin HttpOnly cookies. The Next.js proxy checks permissions and Nest independently enforces scoped RBAC.

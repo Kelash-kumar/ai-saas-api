@@ -7,6 +7,7 @@ export interface RequestAuthority extends Authority {
   userId: string;
 }
 export const systemPermissions = [
+  'admin.access',
   'roles.read',
   'roles.create',
   'roles.update',

@@ -118,6 +118,34 @@ export class AuthController {
     return this.cookies.write(response, result);
   }
 
+  @Post('admin/login')
+  @Public()
+  @HttpCode(200)
+  @UseGuards(LocalAuthenticationGuard)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiSuccess(CredentialsDto)
+  @ApiBody({ type: LoginDto })
+  @ApiOperation({ summary: 'Login to the admin portal; requires current admin.access permission' })
+  async adminLogin(
+    @Body() input: LoginDto,
+    @Req() request: AuthRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    if (!request.loginIdentity) throw new UnauthorizedException('Authentication required');
+    return this.cookies.write(
+      response,
+      await this.sessions.login(
+        request.loginIdentity,
+        {
+          name: input.deviceName,
+          userAgent: request.headers['user-agent'],
+          ip: request.ip,
+        },
+        true,
+      ),
+    );
+  }
+
   @Post('csrf')
   @ApiCookieAuth('refresh-cookie')
   @Public()

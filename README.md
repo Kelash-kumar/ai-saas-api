@@ -46,7 +46,7 @@ Health: [liveness](http://localhost:3000/api/v1/health/live), [readiness](http:/
 - Encrypted transactional outbox, fenced worker leases, retries, dead letters, private file capture and real SMTP transport.
 - Dynamic roles, inheritance and direct permissions, explicit access guards, grant ceilings and protected administration.
 
-Unsafe auth requests require an exact configured Origin. Refresh/logout additionally require cookie-bound `X-CSRF-Token`. Ordinary protected routes require bearer authentication; cookies alone do not authenticate them. Use matching frontend/API hostnames for same-site cookies: with frontend `http://localhost:5173`, call API `http://localhost:3000`.
+Unsafe auth requests require an exact configured Origin. Refresh/logout additionally require cookie-bound `X-CSRF-Token`. Ordinary protected routes require bearer authentication; cookies alone do not authenticate them. Use matching frontend/API hostnames for same-site cookies: with frontend `http://localhost:3001`, call API `http://localhost:3000`.
 
 Development-only token previews remain available without printing credentials:
 
@@ -72,7 +72,7 @@ npm run mail:status
 npm audit
 ```
 
-There are **150 tests**: 63 unit/infrastructure and 87 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
+There are **156 tests**: 63 unit/infrastructure and 93 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
 
 `npm run check` needs configuration but no database connection for its infrastructure tests. `test:database` needs a disposable PostgreSQL server and CREATEDB-capable test role; it creates/drops only owned `foundation_test_<uuid>` databases and never resets the configured application database. Never point tests at production infrastructure.
 
@@ -81,3 +81,11 @@ Delivery is at least once: a crash after SMTP acceptance but before acknowledgem
 Remaining work includes shared throttling, tracing, managed encryption-key rotation/retention, provider bounce handling and deployment/load checks. Current IP throttling is process-local. Production needs separate migration/runtime roles, managed secrets, trusted proxy/ingress setup and backups. Schema changes are never automatic.
 
 The [roadmap](docs/roadmap.md) defines the remaining phases. Manage the isolated Windows database with `npm run db:local -- -Action stop` or `-Action start`. `.env` and `.local` contain private data and are ignored by Git.
+
+## Unified Next.js admin integration
+
+Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
+
+Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
+
+Allow the frontend origin in CORS_ORIGINS and configure MAIL_PUBLIC_URL for verification links. Production HTTPS uses __Host-foundation_refresh; set the same API_REFRESH_COOKIE_NAME in the frontend. Tokens are held by same-origin HttpOnly cookies. The Next.js proxy checks permissions and Nest independently enforces scoped RBAC.

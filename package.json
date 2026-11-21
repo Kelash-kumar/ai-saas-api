@@ -37,7 +37,8 @@
     "mail:retry": "ts-node scripts/outbox.ts retry",
     "auth:recovery-preview": "ts-node scripts/recovery-preview.ts",
     "authorization:bootstrap": "ts-node scripts/authorization.ts bootstrap",
-    "authorization:grant": "ts-node scripts/authorization.ts grant"
+    "authorization:grant": "ts-node scripts/authorization.ts grant",
+    "db:seed": "ts-node scripts/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.2.11",

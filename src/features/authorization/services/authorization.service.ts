@@ -45,7 +45,11 @@ export class AuthorizationService {
   async userAuthority(userId: string) {
     const repository = new AuthorizationRepository(this.source.manager);
     await repository.user(userId);
-    return repository.userAuthority(userId);
+    const [authority, direct] = await Promise.all([
+      repository.userAuthority(userId),
+      repository.directUserGrants(userId),
+    ]);
+    return { ...authority, ...direct };
   }
 
   /** The HTTP guard is a first boundary; mutation authority is read again after the policy lock. */
