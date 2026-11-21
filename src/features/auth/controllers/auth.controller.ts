@@ -39,6 +39,8 @@ import {
   PrincipalDto,
   CsrfDto,
   SessionPageDto,
+  LoginCodeDto,
+  LoginChallengeDto,
 } from '../dto/auth.dto';
 import type { AuthRequest, Principal } from '../interfaces/auth.types';
 import { RegistrationService } from '../services/registration.service';
@@ -102,7 +104,7 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(LocalAuthenticationGuard)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @ApiSuccess(CredentialsDto)
+  @ApiSuccess([CredentialsDto, LoginChallengeDto])
   @ApiBody({ type: LoginDto })
   async login(
     @Body() input: LoginDto,
@@ -115,7 +117,7 @@ export class AuthController {
       userAgent: request.headers['user-agent'],
       ip: request.ip,
     });
-    return this.cookies.write(response, result);
+    return 'mfaRequired' in result ? result : this.cookies.write(response, result);
   }
 
   @Post('admin/login')
@@ -123,7 +125,7 @@ export class AuthController {
   @HttpCode(200)
   @UseGuards(LocalAuthenticationGuard)
   @Throttle({ default: { limit: 10, ttl: 60000 } })
-  @ApiSuccess(CredentialsDto)
+  @ApiSuccess([CredentialsDto, LoginChallengeDto])
   @ApiBody({ type: LoginDto })
   @ApiOperation({ summary: 'Login to the admin portal; requires current admin.access permission' })
   async adminLogin(
@@ -132,18 +134,35 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     if (!request.loginIdentity) throw new UnauthorizedException('Authentication required');
-    return this.cookies.write(
-      response,
-      await this.sessions.login(
-        request.loginIdentity,
-        {
-          name: input.deviceName,
-          userAgent: request.headers['user-agent'],
-          ip: request.ip,
-        },
-        true,
-      ),
+    const result = await this.sessions.login(
+      request.loginIdentity,
+      {
+        name: input.deviceName,
+        userAgent: request.headers['user-agent'],
+        ip: request.ip,
+      },
+      true,
     );
+    return 'mfaRequired' in result ? result : this.cookies.write(response, result);
+  }
+
+  @Post('login/verify')
+  @Public()
+  @HttpCode(200)
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  @ApiSuccess(CredentialsDto)
+  async verifyLogin(
+    @Body() input: LoginCodeDto,
+    @Req() request: AuthRequest,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result = await this.sessions.verifyLogin(input.challengeToken, input.code, {
+      name: 'Verified web login',
+      userAgent: request.headers['user-agent'],
+      ip: request.ip,
+    });
+    if ('mfaRequired' in result) throw new UnauthorizedException('Verification required');
+    return this.cookies.write(response, result);
   }
 
   @Post('csrf')

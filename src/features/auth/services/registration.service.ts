@@ -45,6 +45,17 @@ export class RegistrationService {
     return userId;
   }
 
+  async provisionManaged(
+    repository: AuthenticationRepository,
+    email: string,
+    hash: string,
+    approvedBy: string,
+  ): Promise<string | null> {
+    const id = await this.provision(repository, email, hash);
+    if (id) await repository.approveManagedAccess(id, approvedBy, new Date());
+    return id;
+  }
+
   async requestVerification(email: string): Promise<void> {
     await this.passwords.verify(undefined, newOpaqueToken());
     await this.work.run(async (scope) => {

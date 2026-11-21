@@ -4,7 +4,7 @@
     "name": "NestJS Authentication Foundation - Phases 1-5",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "version": "0.5.1",
-    "description": "Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing. Phase 5 management requests require explicit operator bootstrap of an existing active verified account. New catalog permissions grant nothing automatically. Management variables must target disposable identities/roles deliberately. See docs/phase-05.md. Includes user/company CRUD with shared repositories, verified-account provisioning and safe archival. Unified frontend: http://localhost:3001/login. Admin Login additionally requires admin.access. Run npm run db:seed for an explicit development admin; passwords remain local Postman inputs."
+    "description": "Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing. Phase 5 management requests require explicit operator bootstrap of an existing active verified account. New catalog permissions grant nothing automatically. Management variables must target disposable identities/roles deliberately. See docs/phase-05.md. Includes user/company CRUD with shared repositories, verified-account provisioning and safe archival. Unified frontend: http://localhost:3001/login. Admin Login additionally requires admin.access. Run npm run db:seed for an explicit development admin; passwords remain local Postman inputs. CRM endpoints include reference-style profiles, guard-aware roles, filtered exports, atomic bulk archival/restoration, and email login-code verification. See docs/CRM-MANAGEMENT.md."
   },
   "auth": {
     "type": "bearer",
@@ -184,6 +184,36 @@
     },
     {
       "key": "managedUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "crmUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "crmAdminId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "crmRoleId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "crmCompanyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "challengeToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "verificationCode",
       "value": "",
       "type": "string"
     }
@@ -605,32 +635,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
-                  "function setInput(key, value) {",
-                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
-                  "  else pm.collectionVariables.set(key, value);",
-                  "}",
-                  "function clearSession() {",
-                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
-                  "}",
-                  "if (pm.response.code === 200) {",
-                  "const data = pm.response.json().data;",
-                  "pm.test('Credentials match the response contract', function () {",
-                  "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
-                  "  pm.expect(data.csrfToken).to.match(/^[A-Za-z0-9_-]{43}$/);",
-                  "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
-                  "  pm.expect(data.expiresIn).to.be.above(0);",
-                  "  pm.expect(data).not.to.have.property('refreshToken');",
-                  "});",
-                  "pm.collectionVariables.set('accessToken', data.accessToken);",
-                  "pm.collectionVariables.set('csrfToken', data.csrfToken);",
-                  "pm.collectionVariables.set('sessionId', data.sessionId);",
-                  "pm.test('HttpOnly refresh cookie issued', function () {",
-                  "  const cookies = pm.response.headers.all().filter(header => header.key.toLowerCase() === 'set-cookie');",
-                  "  pm.expect(cookies.some(header => /(?:__Host-)?foundation_refresh=/.test(header.value) && /HttpOnly/i.test(header.value))).to.eql(true);",
-                  "});",
-                  "}"
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const d=pm.response.json().data;if(d.mfaRequired===true){pm.test('No credentials before email code',()=>pm.expect(d).not.to.have.property('accessToken'));pm.collectionVariables.set('challengeToken',d.challengeToken);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.unset(k));}else{pm.test('Credentials issued',()=>pm.expect(d.accessToken).to.be.a('string').and.not.empty);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.set(k,d[k]));pm.collectionVariables.unset('challengeToken');}}"
                 ]
               }
             }
@@ -693,32 +699,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
-                  "pm.test('Auth responses are not cached', function () { pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'); });",
-                  "function setInput(key, value) {",
-                  "  if (pm.environment.has(key)) pm.environment.set(key, value);",
-                  "  else pm.collectionVariables.set(key, value);",
-                  "}",
-                  "function clearSession() {",
-                  "  ['accessToken','csrfToken','sessionId','targetSessionId','sessionIds'].forEach(key => pm.collectionVariables.unset(key));",
-                  "}",
-                  "if (pm.response.code === 200) {",
-                  "const data = pm.response.json().data;",
-                  "pm.test('Credentials match the response contract', function () {",
-                  "  pm.expect(data.accessToken).to.be.a('string').and.not.empty;",
-                  "  pm.expect(data.csrfToken).to.match(/^[A-Za-z0-9_-]{43}$/);",
-                  "  pm.expect(data.sessionId).to.be.a('string').and.not.empty;",
-                  "  pm.expect(data.expiresIn).to.be.above(0);",
-                  "  pm.expect(data).not.to.have.property('refreshToken');",
-                  "});",
-                  "pm.collectionVariables.set('accessToken', data.accessToken);",
-                  "pm.collectionVariables.set('csrfToken', data.csrfToken);",
-                  "pm.collectionVariables.set('sessionId', data.sessionId);",
-                  "pm.test('HttpOnly refresh cookie issued', function () {",
-                  "  const cookies = pm.response.headers.all().filter(header => header.key.toLowerCase() === 'set-cookie');",
-                  "  pm.expect(cookies.some(header => /(?:__Host-)?foundation_refresh=/.test(header.value) && /HttpOnly/i.test(header.value))).to.eql(true);",
-                  "});",
-                  "}"
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const d=pm.response.json().data;if(d.mfaRequired===true){pm.test('No credentials before email code',()=>pm.expect(d).not.to.have.property('accessToken'));pm.collectionVariables.set('challengeToken',d.challengeToken);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.unset(k));}else{pm.test('Credentials issued',()=>pm.expect(d.accessToken).to.be.a('string').and.not.empty);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.set(k,d[k]));pm.collectionVariables.unset('challengeToken');}}"
                 ]
               }
             }
@@ -3100,6 +3082,1253 @@
                   "if(pm.response.code===204){pm.collectionVariables.unset('managedUserId');}"
                 ]
               }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CRM Management",
+      "description": "Run deliberately on disposable records. Admins require admins.* independently. Bulk operations are atomic. Deletion archives accounts/companies; roles are permanently deleted. CSV/XLSX require read + export permissions. Start mail worker for verification and email login codes.",
+      "item": [
+        {
+          "name": "Complete email two-factor login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/v1/auth/login/verify",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"challengeToken\": \"{{challengeToken}}\",\n  \"code\": \"{{verificationCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "if(pm.response.code===200){const d=pm.response.json().data;if(d.mfaRequired===true){pm.test('No credentials before email code',()=>pm.expect(d).not.to.have.property('accessToken'));pm.collectionVariables.set('challengeToken',d.challengeToken);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.unset(k));}else{pm.test('Credentials issued',()=>pm.expect(d.accessToken).to.be.a('string').and.not.empty);['accessToken','csrfToken','sessionId'].forEach(k=>pm.collectionVariables.set(k,d[k]));pm.collectionVariables.unset('challengeToken');}}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admins",
+          "item": [
+            {
+              "name": "List / filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins?page=1&limit=10&sortOrder=desc&deleted=active"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "View",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/{{crmAdminId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\",\n  \"firstName\": \"Managed\",\n  \"lastName\": \"Account\",\n  \"username\": null,\n  \"dateOfBirth\": null,\n  \"gender\": null,\n  \"phone\": null,\n  \"companyId\": null,\n  \"notificationChannel\": \"email\",\n  \"twoFactor\": \"none\",\n  \"roleIds\": [],\n  \"permissionIds\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                      "if(pm.response.code>=200&&pm.response.code<300)pm.collectionVariables.set('crmAdminId',pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/{{crmAdminId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Account\",\n  \"notificationChannel\": \"email\",\n  \"twoFactor\": \"none\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmAdminId}}\"\n  ],\n  \"action\": \"delete\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/export?format=csv"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Excel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/export?format=xlsx"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List deleted",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins?deleted=only"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Restore selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/admins/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmAdminId}}\"\n  ],\n  \"action\": \"restore\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "List / filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users?page=1&limit=10&sortOrder=desc&deleted=active"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "View",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/{{crmUserId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\",\n  \"confirmPassword\": \"{{password}}\",\n  \"firstName\": \"Managed\",\n  \"lastName\": \"Account\",\n  \"username\": null,\n  \"dateOfBirth\": null,\n  \"gender\": null,\n  \"phone\": null,\n  \"companyId\": null,\n  \"notificationChannel\": \"email\",\n  \"twoFactor\": \"none\",\n  \"roleIds\": [],\n  \"permissionIds\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                      "if(pm.response.code>=200&&pm.response.code<300)pm.collectionVariables.set('crmUserId',pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/{{crmUserId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"firstName\": \"Updated\",\n  \"lastName\": \"Account\",\n  \"notificationChannel\": \"email\",\n  \"twoFactor\": \"none\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmUserId}}\"\n  ],\n  \"action\": \"delete\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/export?format=csv"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Excel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/export?format=xlsx"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List deleted",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users?deleted=only"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Restore selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/users/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmUserId}}\"\n  ],\n  \"action\": \"restore\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Roles",
+          "item": [
+            {
+              "name": "List / filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles?page=1&limit=10&sortOrder=desc&deleted=active"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "View",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles/{{crmRoleId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"crm-staff\",\n  \"guard\": \"user\",\n  \"description\": \"Managed CRM role\",\n  \"permissionIds\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                      "if(pm.response.code>=200&&pm.response.code<300)pm.collectionVariables.set('crmRoleId',pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles/{{crmRoleId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"crm-staff\",\n  \"guard\": \"user\",\n  \"description\": \"Updated role\",\n  \"permissionIds\": []\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmRoleId}}\"\n  ],\n  \"action\": \"delete\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles/export?format=csv"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Excel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/roles/export?format=xlsx"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Companies",
+          "item": [
+            {
+              "name": "List / filter",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies?page=1&limit=10&sortOrder=desc&deleted=active"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "View",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/{{crmCompanyId}}"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Create",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"CRM company\",\n  \"email\": null,\n  \"phone\": null,\n  \"website\": null,\n  \"address\": null\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));",
+                      "if(pm.response.code>=200&&pm.response.code<300)pm.collectionVariables.set('crmCompanyId',pm.response.json().data.id);"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Update",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/{{crmCompanyId}}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Updated CRM company\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Delete selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmCompanyId}}\"\n  ],\n  \"action\": \"delete\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/export?format=csv"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Excel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/export?format=xlsx"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "List deleted",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies?deleted=only"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Restore selection",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/companies/bulk",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"ids\": [\n    \"{{crmCompanyId}}\"\n  ],\n  \"action\": \"restore\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Permission catalog",
+          "item": [
+            {
+              "name": "List",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/permissions?limit=100"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export CSV",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/permissions/export?format=csv"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Export Excel",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Origin",
+                    "value": "{{origin}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": "{{baseUrl}}/api/v1/crm/permissions/export?format=xlsx"
+              },
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test('Successful request',()=>pm.expect(pm.response.code).to.be.within(200,299));"
+                    ]
+                  }
+                }
+              ]
             }
           ]
         }

@@ -13,7 +13,7 @@ This guide covers the application as implemented through Phase 5. It is a backen
 | API client      | Postman desktop, or Postman web with its Desktop Agent for local requests.                                |
 | SMTP account    | Optional for development; required to deliver external mail instead of private file capture.              |
 
-On the current machine the project is at `E:\nestjs-auth-foundation`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and five database migrations are already configured. The following instructions also explain a fresh checkout.
+On the current machine the project is at `E:\nestjs-auth-foundation`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and seven database migrations are already configured. The following instructions also explain a fresh checkout.
 
 ## 2. Quick start on this Windows workspace
 
@@ -136,7 +136,7 @@ Edit `.env` from the project root, never a generated `dist` file. Restart API/wo
 
 Import these files through Postman's **Import** action:
 
-1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 55 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
+1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 93 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
 2. [Local.postman_environment.json](../postman/Local.postman_environment.json) — optional local input environment.
 
 Select **NestJS Foundation - Local** if using the supplied environment. The collection also works without an environment: set its variables directly. Configure these input values locally:
@@ -333,7 +333,7 @@ npm run db:schema-check
 npm audit
 ```
 
-Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 156 tests: 63 unit/infrastructure and 93 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. The user/company extension adds the fifth migration; apply it before using this version.
+Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 168 tests: 63 unit/infrastructure and 105 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. The user/company extension adds the fifth migration; apply it before using this version.
 
 For compiled startup:
 
@@ -392,3 +392,5 @@ Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in 
 Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
 
 Allow the frontend origin in CORS_ORIGINS and configure MAIL_PUBLIC_URL for verification links. Production HTTPS uses __Host-foundation_refresh; set the same API_REFRESH_COOKIE_NAME in the frontend. Tokens are held by same-origin HttpOnly cookies. The Next.js proxy checks permissions and Nest independently enforces scoped RBAC.
+
+See [CRM management and email two-factor](CRM-MANAGEMENT.md) for the reference-style Admins/Roles/Users/Companies screens, migration 6, filtered exports and the email-code login contract.

@@ -5,6 +5,7 @@ import { BaseEntity } from '../../../common/persistence/base.entity';
 
 @Entity('users')
 @Index('uq_users_email', ['email'], { unique: true })
+@Index('uq_users_username', ['username'], { unique: true, where: 'username IS NOT NULL' })
 @Index('ix_users_created_id', ['createdAt', 'id'])
 @Index('ix_users_company', ['companyId'])
 @Check('ck_users_email_normalized', `email = lower(btrim(email)) AND length(email) > 3`)
@@ -15,6 +16,19 @@ import { BaseEntity } from '../../../common/persistence/base.entity';
   "deactivation_source IS NULL OR deactivation_source IN ('self', 'administrative')",
 )
 export class UserEntity extends BaseEntity {
+  @Column({ name: 'access_approved_at', type: 'timestamptz', nullable: true })
+  accessApprovedAt!: Date | null;
+  @Column({ name: 'access_approved_by', type: 'uuid', nullable: true }) accessApprovedBy!:
+    string | null;
+  @Column({ type: 'varchar', length: 80, nullable: true }) username!: string | null;
+  @Column({ name: 'date_of_birth', type: 'date', nullable: true }) dateOfBirth!: string | null;
+  @Column({ type: 'varchar', length: 20, nullable: true }) gender!: string | null;
+  @Column({ name: 'avatar_data', type: 'varchar', length: 8000, nullable: true }) avatarData!:
+    string | null;
+  @Column({ name: 'notification_channel', type: 'varchar', length: 16, default: 'none' })
+  notificationChannel!: 'none' | 'email';
+  @Column({ name: 'two_factor', type: 'varchar', length: 16, default: 'none' }) twoFactor!:
+    'none' | 'email';
   @Column({ name: 'first_name', type: 'varchar', length: 100, nullable: true })
   firstName!: string | null;
 

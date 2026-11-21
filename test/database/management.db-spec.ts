@@ -133,7 +133,7 @@ describe('User and company management', () => {
     await del('companies/' + row.id, a).expect(204);
     await get('companies/' + row.id, a).expect(404);
   });
-  it('provisions users with the existing hash and transactional verification flow', async () => {
+  it('provisions immediately usable managed accounts without falsely verifying their email', async () => {
     const a = await identity(true);
     const company = await db.source.getRepository(CompanyEntity).save({ name: 'Acme' });
     const response = await post(
@@ -162,7 +162,7 @@ describe('User and company management', () => {
       .post('/api/v1/auth/login')
       .set('Origin', origin)
       .send({ email: user.email, password: input().password })
-      .expect(401);
+      .expect(200);
     const mail = await db.source
       .getRepository(MailOutboxEntity)
       .createQueryBuilder('m')

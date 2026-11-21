@@ -12,9 +12,11 @@ import { PasswordResetTokenEntity } from '../../features/auth/entities/password-
 import { EmailVerificationTokenEntity } from '../../features/auth/entities/email-verification-token.entity';
 import { MailOutboxEntity } from '../../features/notifications/entities/mail-outbox.entity';
 import { AccountActivationTokenEntity } from '../../features/auth/entities/account-activation-token.entity';
+import { LoginChallengeEntity } from '../../features/auth/entities/login-challenge.entity';
 
 /** Explicit metadata registry; shared by runtime, migrations and tests, without business imports. */
 export const entities = [
+  LoginChallengeEntity,
   CompanyEntity,
   UserEntity,
   RoleEntity,

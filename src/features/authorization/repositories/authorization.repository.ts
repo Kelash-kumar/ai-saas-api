@@ -1,6 +1,6 @@
 import type { EntityManager } from 'typeorm';
 import { ILike, In } from 'typeorm';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import type { Authority } from '../interfaces/authority';
 import { recoveryPermissions } from '../interfaces/authority';
 import { RoleEntity } from '../entities/role.entity';
@@ -110,7 +110,7 @@ export class AuthorizationRepository {
   async hasRecoveryManager(): Promise<boolean> {
     const rows: unknown = await this.manager.query(
       `WITH RECURSIVE subjects(id) AS (
-      SELECT id FROM users WHERE deleted_at IS NULL AND status='active' AND email_verified_at IS NOT NULL AND (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP)
+      SELECT id FROM users WHERE deleted_at IS NULL AND status='active' AND (email_verified_at IS NOT NULL OR access_approved_at IS NOT NULL) AND (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP)
     ), expanded(user_id, role_id) AS (
       SELECT ur.user_id, ur.role_id FROM user_roles ur JOIN subjects u ON ur.user_id=u.id
       UNION SELECT held.user_id, edge.inherited_role_id FROM expanded held JOIN role_inheritance edge ON held.role_id=edge.role_id
@@ -180,6 +180,12 @@ export class AuthorizationRepository {
     return new PermissionsRepository(this.manager).create({ resource, action });
   }
   async membership(userId: string, roleId: string, grant: boolean): Promise<void> {
+    if (grant) {
+      const user = await this.user(userId),
+        role = await this.role(roleId);
+      if (role.guard !== (user.userType === 'admin' ? 'admin' : 'user'))
+        throw new BadRequestException('Role guard must match account type');
+    }
     const repository = this.manager.getRepository(UserRoleEntity);
     if (grant)
       await repository
@@ -213,6 +219,8 @@ export class AuthorizationRepository {
     else await repository.delete({ roleId, permissionId });
   }
   async inheritance(roleId: string, inheritedRoleId: string, grant: boolean): Promise<void> {
+    if (grant && (await this.role(roleId)).guard !== (await this.role(inheritedRoleId)).guard)
+      throw new BadRequestException('Inherited roles must use the same guard');
     const repository = this.manager.getRepository(RoleInheritanceEntity);
     if (grant)
       await repository

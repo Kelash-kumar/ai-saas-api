@@ -5,6 +5,10 @@ import type { Delivery, MailPayload } from './interfaces/mail.types';
 import { DeliveryError } from './interfaces/mail.types';
 
 const templates: Record<string, { subject: string; text: string; route?: string }> = {
+  login_code: {
+    subject: 'Your sign-in verification code',
+    text: 'Your sign-in code is valid for five minutes. Never share this code.',
+  },
   account_suspended: {
     subject: 'Your account was suspended',
     text: 'An authorized administrator suspended your account and signed out all sessions. Contact support; self-service reactivation cannot override an administrative block.',
@@ -55,6 +59,11 @@ export class MailRenderer {
     )
       throw new DeliveryError('INVALID_PAYLOAD', true);
     let text = entry.text;
+    if (template === 'login_code') {
+      if (!payload.token || !/^\d{6}$/.test(payload.token))
+        throw new DeliveryError('INVALID_PAYLOAD', true);
+      text += '\n\n' + payload.token;
+    }
     if (entry.route) {
       if (!payload.token) throw new DeliveryError('INVALID_PAYLOAD', true);
       const base = `${this.config.settings.publicUrl.replace(/\/$/, '')}/`;

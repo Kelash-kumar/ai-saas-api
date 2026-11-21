@@ -3,9 +3,10 @@ import type { Type } from '@nestjs/common';
 import { ApiExtraModels, ApiResponse, getSchemaPath } from '@nestjs/swagger';
 
 /** Document the same envelope the global JSON response interceptor emits. */
-export function ApiSuccess(model: Type<unknown>, status = 200) {
+export function ApiSuccess(model: Type<unknown> | Type<unknown>[], status = 200) {
+  const models = Array.isArray(model) ? model : [model];
   return applyDecorators(
-    ApiExtraModels(model),
+    ApiExtraModels(...models),
     ApiResponse({
       status,
       schema: {
@@ -13,7 +14,9 @@ export function ApiSuccess(model: Type<unknown>, status = 200) {
         required: ['success', 'data'],
         properties: {
           success: { type: 'boolean', enum: [true] },
-          data: { $ref: getSchemaPath(model) },
+          data: Array.isArray(model)
+            ? { oneOf: models.map((item) => ({ $ref: getSchemaPath(item) })) }
+            : { $ref: getSchemaPath(model) },
         },
       },
     }),

@@ -19,7 +19,7 @@ export function setupApp(app: NestExpressApplication): void {
     request.id = randomUUID();
     response.setHeader('X-Request-Id', request.id);
     if (
-      ['/api/v1/auth', '/api/v1/users', '/api/v1/companies'].some((prefix) =>
+      ['/api/v1/auth', '/api/v1/users', '/api/v1/companies', '/api/v1/crm'].some((prefix) =>
         request.path.startsWith(prefix),
       )
     )

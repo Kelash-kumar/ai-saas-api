@@ -22,6 +22,8 @@ export class UserManagementQueryDto extends PageQueryDto {
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() companyId?: string;
 }
 export class UserViewDto {
+  @ApiProperty({ type: String, format: 'date-time', nullable: true })
+  accessApprovedAt!: Date | null;
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() email!: string;
   @ApiProperty({ type: String, nullable: true }) firstName!: string | null;

@@ -8,6 +8,7 @@ import { PASSWORD_HASHER } from '../interfaces/auth.types';
 import type { PasswordHasher, LoginIdentity } from '../interfaces/auth.types';
 import { tokenDigest } from '../crypto/opaque-token';
 import { failedAttempt } from '../policies/account-lock.policy';
+import { loginEligible } from '../policies/login-eligibility';
 
 @Injectable()
 export class LocalStrategy {
@@ -36,7 +37,7 @@ export class LocalStrategy {
             await repository.setLoginState(user.id, state.attempts, state.lockedUntil);
             return false;
           }
-          if (user.status !== 'active' || !user.emailVerifiedAt) return false;
+          if (!loginEligible(user, at)) return false;
           await repository.setLoginState(user.id, 0, null);
           return true;
         })

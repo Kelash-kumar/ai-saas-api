@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { randomInt } from 'node:crypto';
+import { LoginChallengeRepository } from '../repositories/login-challenge.repository';
+import { SECURITY_MESSAGES } from '../../notifications/interfaces/mail.types';
+import type { SecurityMessages } from '../../notifications/interfaces/mail.types';
 import { DataSource } from 'typeorm';
 import { UnitOfWork } from '../../../core/database/unit-of-work';
 import { AuthConfig } from '../../../core/config/auth-config.service';
@@ -13,19 +17,10 @@ import type {
   Principal,
   LoginIdentity,
 } from '../interfaces/auth.types';
-import type { UserEntity } from '../../users/entities/user.entity';
+import { loginEligible as eligible } from '../policies/login-eligibility';
 import type { SessionEntity } from '../../sessions/entities/session.entity';
 import type { PageQueryDto } from '../../../common/pagination/page-query.dto';
 import { AuthorizationRepository } from '../../authorization/repositories/authorization.repository';
-
-function eligible(user: UserEntity | null, at: Date): user is UserEntity {
-  return (
-    !!user &&
-    user.status === 'active' &&
-    !!user.emailVerifiedAt &&
-    (!user.lockedUntil || user.lockedUntil <= at)
-  );
-}
 
 @Injectable()
 export class SessionAuthService {
@@ -36,6 +31,7 @@ export class SessionAuthService {
     private readonly access: AccessTokenService,
     private readonly cookies: SessionCookies,
     private readonly logger: AppLogger,
+    @Inject(SECURITY_MESSAGES) private readonly messages: SecurityMessages,
   ) {}
 
   private async issue(
@@ -62,7 +58,8 @@ export class SessionAuthService {
     identity: LoginIdentity,
     device: ClientDevice,
     adminPortal = false,
-  ): Promise<IssuedCredentials> {
+    proof?: { token: string; code: string },
+  ): Promise<IssuedCredentials | { mfaRequired: true; challengeToken: string; expiresIn: number }> {
     const { userId } = identity;
     const credentials = await this.work.run(async (scope) => {
       const repository = scope.get(AuthenticationRepository);
@@ -76,6 +73,43 @@ export class SessionAuthService {
         return null;
       if (adminPortal && !(await policy.userAuthority(userId)).permissions.includes('admin.access'))
         return null;
+      const challenges = scope.get(LoginChallengeRepository);
+      if (proof) {
+        const challenge = await challenges.lock(tokenDigest(proof.token));
+        if (
+          !challenge ||
+          challenge.userId !== userId ||
+          challenge.consumedAt ||
+          challenge.expiresAt <= new Date() ||
+          challenge.attempts >= 5 ||
+          user.twoFactor !== 'email' ||
+          challenge.credentialStamp !== identity.credentialStamp ||
+          challenge.adminPortal !== adminPortal
+        )
+          return null;
+        const valid = challenge.codeDigest === tokenDigest(proof.token + ':' + proof.code);
+        await challenges.update(challenge.id, {
+          attempts: challenge.attempts + 1,
+          ...(valid || challenge.attempts >= 4 ? { consumedAt: new Date() } : {}),
+        });
+        if (!valid) return null;
+        if (!user.emailVerifiedAt) await repository.verifyMailboxFromLogin(userId, new Date());
+      } else if (user.twoFactor === 'email') {
+        const token = newOpaqueToken();
+        const code = String(randomInt(0, 1000000)).padStart(6, '0');
+        await challenges.create(
+          {
+            userId,
+            tokenDigest: tokenDigest(token),
+            codeDigest: tokenDigest(token + ':' + code),
+            credentialStamp: identity.credentialStamp,
+            adminPortal,
+            expiresAt: new Date(Date.now() + 300000),
+          },
+          this.messages.prepare('login_code', user.email, code),
+        );
+        return { mfaRequired: true as const, challengeToken: token, expiresIn: 300 };
+      }
       const session = await repository.createSession(
         userId,
         new Date(Date.now() + this.config.settings.refreshTtl * 1000),
@@ -86,8 +120,24 @@ export class SessionAuthService {
       return this.issue(userId, session, token);
     });
     if (!credentials) throw new UnauthorizedException('Invalid credentials or account unavailable');
-    this.logger.security('login.succeeded', userId);
+    this.logger.security(
+      'mfaRequired' in credentials ? 'login.challenge' : 'login.succeeded',
+      userId,
+    );
     return credentials;
+  }
+
+  async verifyLogin(token: string, code: string, device: ClientDevice) {
+    const challenge = await new LoginChallengeRepository(this.source.manager).find(
+      tokenDigest(token),
+    );
+    if (!challenge) throw new UnauthorizedException('Invalid credentials or account unavailable');
+    return this.login(
+      { userId: challenge.userId, credentialStamp: challenge.credentialStamp },
+      device,
+      challenge.adminPortal,
+      { token, code },
+    );
   }
 
   async refresh(raw: string): Promise<IssuedCredentials> {

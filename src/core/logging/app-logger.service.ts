@@ -3,6 +3,7 @@ import { PinoLogger } from 'nestjs-pino';
 import { safeStack } from './logging.options';
 
 export type SecurityEvent =
+  | 'login.challenge'
   | 'login.succeeded'
   | 'login.failed'
   | 'session.revoked'

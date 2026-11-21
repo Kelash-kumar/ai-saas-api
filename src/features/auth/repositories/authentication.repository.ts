@@ -56,6 +56,19 @@ export class AuthenticationRepository {
       .update({ id }, { failedLoginAttempts: attempts, lockedUntil });
   }
 
+  async approveManagedAccess(userId: string, approvedBy: string, at: Date): Promise<void> {
+    await this.manager
+      .getRepository(UserEntity)
+      .update({ id: userId }, { accessApprovedAt: at, accessApprovedBy: approvedBy });
+  }
+
+  async verifyMailboxFromLogin(userId: string, at: Date): Promise<void> {
+    await this.manager.getRepository(UserEntity).update({ id: userId }, { emailVerifiedAt: at });
+    await this.manager
+      .getRepository(EmailVerificationTokenEntity)
+      .update({ userId, consumedAt: IsNull() }, { consumedAt: at });
+  }
+
   async queueVerification(
     userId: string,
     digest: string,
@@ -165,11 +178,21 @@ export class AuthenticationRepository {
       .innerJoinAndSelect('session.user', 'user')
       .where('session.id = :sessionId AND session.userId = :userId', { userId, sessionId })
       .andWhere('session.revokedAt IS NULL AND session.expiresAt > :at', { at })
-      .andWhere("user.status = 'active' AND user.emailVerifiedAt IS NOT NULL")
+      .andWhere(
+        "user.status = 'active' AND (user.emailVerifiedAt IS NOT NULL OR user.accessApprovedAt IS NOT NULL)",
+      )
       .andWhere('(user.lockedUntil IS NULL OR user.lockedUntil <= :at)', { at })
       .getOne();
     return session
-      ? { userId, sessionId, email: session.user.email, userType: session.user.userType }
+      ? {
+          userId,
+          sessionId,
+          email: session.user.email,
+          userType: session.user.userType,
+          firstName: session.user.firstName,
+          lastName: session.user.lastName,
+          avatarData: session.user.avatarData,
+        }
       : null;
   }
 

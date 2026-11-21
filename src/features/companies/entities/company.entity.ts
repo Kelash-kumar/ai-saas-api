@@ -1,4 +1,4 @@
-import { Check, Column, Entity, Index } from 'typeorm';
+import { Check, Column, Entity, Index, DeleteDateColumn } from 'typeorm';
 import { BaseEntity } from '../../../common/persistence/base.entity';
 @Entity('companies')
 @Index('uq_companies_email', ['email'], { unique: true })
@@ -6,6 +6,8 @@ import { BaseEntity } from '../../../common/persistence/base.entity';
 @Check('ck_companies_name', 'length(btrim(name)) > 0')
 @Check('ck_companies_email', 'email IS NULL OR (email = lower(btrim(email)) AND length(email) > 3)')
 export class CompanyEntity extends BaseEntity {
+  @DeleteDateColumn({ name: 'deleted_at', type: 'timestamptz', nullable: true })
+  deletedAt!: Date | null;
   @Column({ type: 'varchar', length: 160 }) name!: string;
   @Column({ type: 'varchar', length: 320, nullable: true }) email!: string | null;
   @Column({ type: 'varchar', length: 30, nullable: true }) phone!: string | null;

@@ -1,6 +1,7 @@
 import type { PreparedVerification } from '../../auth/interfaces/auth.types';
 
 export const mailTemplates = [
+  'login_code',
   'verify_email',
   'password_reset',
   'account_activation',

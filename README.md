@@ -72,7 +72,7 @@ npm run mail:status
 npm audit
 ```
 
-There are **156 tests**: 63 unit/infrastructure and 93 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
+There are **168 tests**: 63 unit/infrastructure and 105 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
 
 `npm run check` needs configuration but no database connection for its infrastructure tests. `test:database` needs a disposable PostgreSQL server and CREATEDB-capable test role; it creates/drops only owned `foundation_test_<uuid>` databases and never resets the configured application database. Never point tests at production infrastructure.
 
@@ -89,3 +89,5 @@ Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in 
 Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
 
 Allow the frontend origin in CORS_ORIGINS and configure MAIL_PUBLIC_URL for verification links. Production HTTPS uses __Host-foundation_refresh; set the same API_REFRESH_COOKIE_NAME in the frontend. Tokens are held by same-origin HttpOnly cookies. The Next.js proxy checks permissions and Nest independently enforces scoped RBAC.
+
+See [CRM management and email two-factor](docs/CRM-MANAGEMENT.md) for the reference-style Admins/Roles/Users/Companies screens, migration 6, filtered exports and the email-code login contract.

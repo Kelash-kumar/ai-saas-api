@@ -23,6 +23,7 @@ function view(row: UserEntity) {
     companyId: row.companyId,
     status: row.status,
     emailVerifiedAt: row.emailVerifiedAt,
+    accessApprovedAt: row.accessApprovedAt,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
@@ -55,7 +56,12 @@ export class UserManagementService {
       [],
       async (repository, _actor, scope) => {
         if (input.companyId) await scope.get(CompaniesRepository).require(input.companyId);
-        const id = await this.registration.provision(repository.recovery(), input.email, hash);
+        const id = await this.registration.provisionManaged(
+          repository.recovery(),
+          input.email,
+          hash,
+          principal.userId,
+        );
         if (!id) throw new ConflictException('Resource already exists');
         const users = scope.get(TypeormUsersRepository);
         await users.update(id, {

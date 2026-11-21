@@ -6,6 +6,7 @@ import type { PasswordHasher, Principal } from '../interfaces/auth.types';
 import type { UserEntity } from '../../users/entities/user.entity';
 import { RecoveryRepository } from '../repositories/recovery.repository';
 import { failedAttempt } from '../policies/account-lock.policy';
+import { loginEligible } from '../policies/login-eligibility';
 
 export interface PasswordProof {
   hash: string | undefined;
@@ -33,13 +34,7 @@ export class PasswordConfirmation {
     proof: PasswordProof,
   ): Promise<boolean> {
     const at = new Date();
-    if (
-      !user ||
-      user.status !== 'active' ||
-      !user.emailVerifiedAt ||
-      (user.lockedUntil && user.lockedUntil > at)
-    )
-      return false;
+    if (!loginEligible(user, at)) return false;
     const session = await repository.lockSession(principal.sessionId, user.id);
     if (!session || session.revokedAt || session.expiresAt <= at) return false;
     if (proof.hash !== user.passwordHash) return false;

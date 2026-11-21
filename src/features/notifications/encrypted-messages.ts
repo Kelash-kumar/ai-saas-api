@@ -45,6 +45,11 @@ export class EncryptedMessages implements SecurityMessages {
     if (!payload || typeof payload !== 'object' || Array.isArray(payload))
       throw new Error('Invalid message');
     const token = 'token' in payload ? payload.token : undefined;
+    if (template === 'login_code') {
+      if (typeof token !== 'string' || !/^\d{6}$/.test(token))
+        throw new Error('Invalid login code');
+      return { token };
+    }
     if (
       ['verify_email', 'password_reset', 'account_activation'].includes(template) &&
       !validOpaqueToken(token)

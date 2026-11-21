@@ -19,6 +19,10 @@ export class EmailDto {
   @MaxLength(320)
   email!: string;
 }
+export class LoginCodeDto {
+  @ApiProperty() @Matches(/^[A-Za-z0-9_-]{43}$/) challengeToken!: string;
+  @ApiProperty({ minLength: 6, maxLength: 6 }) @Matches(/^\d{6}$/) code!: string;
+}
 
 export class RegisterDto extends EmailDto {
   @ApiProperty({ minLength: 15, maxLength: 128, writeOnly: true })
@@ -56,12 +60,21 @@ export class CredentialsDto {
   @ApiProperty() expiresIn!: number;
   @ApiProperty() sessionId!: string;
 }
+export class LoginChallengeDto {
+  @ApiProperty({ enum: [true] }) mfaRequired!: true;
+  @ApiProperty({ description: 'Short-lived opaque challenge; no authentication privileges' })
+  challengeToken!: string;
+  @ApiProperty({ example: 300 }) expiresIn!: number;
+}
 
 export class MessageDto {
   @ApiProperty() message!: string;
 }
 
 export class PrincipalDto {
+  @ApiPropertyOptional({ type: String, nullable: true }) firstName?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) lastName?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) avatarData?: string | null;
   @ApiProperty({ format: 'uuid' }) userId!: string;
   @ApiProperty({ format: 'uuid' }) sessionId!: string;
   @ApiProperty() email!: string;

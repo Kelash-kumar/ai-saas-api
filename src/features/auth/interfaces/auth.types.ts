@@ -2,6 +2,9 @@ import type { Request } from 'express';
 import type { RequestAuthority } from '../../authorization/interfaces/authority';
 
 export interface Principal {
+  firstName?: string | null;
+  lastName?: string | null;
+  avatarData?: string | null;
   userId: string;
   sessionId: string;
   email: string;

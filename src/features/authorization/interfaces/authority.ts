@@ -8,6 +8,18 @@ export interface RequestAuthority extends Authority {
 }
 export const systemPermissions = [
   'admin.access',
+  'admins.read',
+  'admins.create',
+  'admins.update',
+  'admins.delete',
+  'admins.restore',
+  'admins.export',
+  'users.restore',
+  'users.export',
+  'companies.restore',
+  'companies.export',
+  'roles.export',
+  'permissions.export',
   'roles.read',
   'roles.create',
   'roles.update',

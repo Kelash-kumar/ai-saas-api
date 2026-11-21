@@ -6,7 +6,7 @@ This update is implemented in E:\nestjs-auth-foundation. The Laravel repository 
 
 - Existing BaseRepository handles create/update/delete and validated pagination. ManagementRepository adds one shared required lookup and literal multi-column search; both user and company repositories reuse it.
 - Existing AuthorizationService.mutate remains the single policy lock, actor/session recheck, transaction and last-recovery-manager boundary. Its callback receives the existing TransactionScope, so feature repositories use the same transaction instead of opening nested transactions or exposing an EntityManager publicly.
-- RegistrationService.provision is shared by public registration and managed user creation: both use the existing password hasher, opaque verification token, token digest and encrypted transactional outbox. Managed creation does not bypass email verification or create a privileged identity.
+- RegistrationService.provision is shared by public registration and managed user creation: both use the existing password hasher, opaque verification token, token digest and encrypted transactional outbox. Managed creation now records a separate audited login approval (migration 7), allowing immediate login without falsely verifying the email or granting extra permissions.
 - UserProfileDto is reused through Swagger IntersectionType/PartialType for managed create/update validation. Common PageQueryDto, page metadata, error mapping, success envelopes, Origin guard and RBAC decorators are retained.
 - Controllers declare routes, DTOs and exact permissions. Services contain feature rules. HTTP responses use explicit projections rather than raw entities. No generic CRUD controller dynamically guesses validation or permissions.
 
@@ -55,7 +55,7 @@ All paths begin /api/v1. Every route requires a valid bearer access token. POST/
 | PATCH /companies/:id  | companies.update            | 200 updated company                                       |
 | DELETE /companies/:id | companies.delete            | Empty 204; linked users cause 409                         |
 | GET /users            | users.read                  | 200 paginated user profiles                               |
-| POST /users           | users.create                | 201 unverified customer account and queued verification   |
+| POST /users           | users.create                | 201 login-approved account; mailbox verification queued   |
 | GET /users/:id        | users.read                  | 200 user profile or 404                                   |
 | PATCH /users/:id      | users.update + target scope | 200 profile/company update                                |
 | DELETE /users/:id     | users.delete + target scope | Empty 204; archives account and revokes sessions/recovery |
@@ -96,7 +96,7 @@ Update a profile or unlink a company:
 { "firstName": "Grace", "phone": null, "companyId": null }
 ```
 
-PATCH /users/:id permits firstName, lastName, phone and companyId only. Email and credentials remain outside this CRUD contract to preserve verification and password-recovery rules. Use the existing reset/change-password APIs; status, unlock, roles and direct permissions remain under /authorization. The existing /auth/me principal shape remains unchanged; use /users/:id for managed profile data.
+PATCH /users/:id permits firstName, lastName, phone and companyId only. Email and credentials remain outside this CRUD contract to preserve verification and password-recovery rules. Use the existing reset/change-password APIs; status, unlock, roles and direct permissions remain under /authorization. The /auth/me principal includes safe profile fields; use /users/:id for managed profile data.
 
 Lists accept existing page/limit/search/sortBy/sortOrder. Maximum limit is 100. Company search covers name/email; sorts id/name/email/createdAt/updatedAt. User search covers email/firstName/lastName; sorts id/email/firstName/lastName/createdAt/updatedAt/status. Users additionally accept companyId. Search escapes SQL LIKE metacharacters literally. Company profile responses need no per-row user query; user responses expose companyId without per-row company loading.
 
@@ -113,7 +113,7 @@ Reimport postman/NestJS-Auth-Foundation.postman_collection.json. It now contains
 1. Register/verify/bootstrap your operator as usual. Send Login using its email/password inputs.
 2. Set companyName. Send Create company, List companies, Get company and Update company. The create script stores companyId at collection scope.
 3. Set managedUserEmail and managedUserPassword to a separate disposable account; managedFirstName/managedLastName have example defaults. Send Create managed user. It stores managedUserId, queues verification, and leaves the operator's login/cookie state intact.
-4. Send List users and Get managed user. Use the existing mail/verification flow separately if you want that new user to log in.
+4. Send List users and Get managed user. The user can immediately sign in with Login as User. Mailbox verification is separate; enabled email second-factor still applies.
 5. Send Update managed user: it edits the name and unlinks companyId. Send Archive managed user, then Delete company for cleanup.
 
 Keep runtime companyId and managedUserId at collection scope; do not shadow them with environment inputs. Password/token export values are blank. Requests use JSON.stringify to preserve quotes/backslashes in input. Do not Run All blindly: mail checkpoints and destructive lifecycle operations need deliberate ordering.
