@@ -23,7 +23,7 @@ export class EmailDto {
 export class RegisterDto extends EmailDto {
   @ApiProperty({ minLength: 15, maxLength: 128, writeOnly: true })
   @IsString()
-  @MinLength(15)
+  @MinLength(12)
   @MaxLength(128)
   password!: string;
 }
