@@ -20,20 +20,29 @@ export class RegistrationService {
   async register(email: string, password: string): Promise<void> {
     // Always perform the expensive work, including when the email already exists.
     const hash = await this.passwords.hash(password);
-    const token = newOpaqueToken();
     const id = await this.work.run(async (scope) => {
       const repository = scope.get(AuthenticationRepository);
-      const userId = await repository.insertUser(email, hash);
-      if (!userId) return null;
-      await repository.queueVerification(
-        userId,
-        tokenDigest(token),
-        new Date(Date.now() + this.config.settings.verificationTtl * 1000),
-        this.messages.prepare(email, token),
-      );
-      return userId;
+      return this.provision(repository, email, hash);
     });
     if (id) this.logger.security('account.registered', id);
+  }
+
+  /** Shared account provisioning; the caller owns the transaction and authorization boundary. */
+  async provision(
+    repository: AuthenticationRepository,
+    email: string,
+    hash: string,
+  ): Promise<string | null> {
+    const userId = await repository.insertUser(email, hash);
+    if (!userId) return null;
+    const token = newOpaqueToken();
+    await repository.queueVerification(
+      userId,
+      tokenDigest(token),
+      new Date(Date.now() + this.config.settings.verificationTtl * 1000),
+      this.messages.prepare(email, token),
+    );
+    return userId;
   }
 
   async requestVerification(email: string): Promise<void> {

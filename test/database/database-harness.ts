@@ -48,7 +48,9 @@ export class DatabaseHarness {
 
   async reset(): Promise<void> {
     this.assertOwned();
-    await this.source.query('TRUNCATE TABLE users, roles, permissions, mail_outbox CASCADE');
+    await this.source.query(
+      'TRUNCATE TABLE users, companies, roles, permissions, mail_outbox CASCADE',
+    );
   }
 
   private assertOwned(): void {

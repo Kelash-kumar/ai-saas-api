@@ -1,6 +1,6 @@
 import { ILike } from 'typeorm';
 import type { EntityManager, FindOptionsWhere } from 'typeorm';
-import { BaseRepository } from '../../../common/persistence/base.repository';
+import { ManagementRepository } from '../../../common/persistence/management.repository';
 import type { PageQueryDto } from '../../../common/pagination/page-query.dto';
 import { UserEntity } from '../entities/user.entity';
 import type {
@@ -9,7 +9,10 @@ import type {
   UsersRepository,
 } from '../interfaces/users-repository.interface';
 
-export class TypeormUsersRepository extends BaseRepository<UserEntity> implements UsersRepository {
+export class TypeormUsersRepository
+  extends ManagementRepository<UserEntity>
+  implements UsersRepository
+{
   constructor(manager: EntityManager) {
     super(UserEntity, manager);
   }

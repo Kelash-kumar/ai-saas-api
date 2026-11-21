@@ -3,8 +3,8 @@
     "_postman_id": "a0a60047-d919-4be9-93c2-81059180e1d2",
     "name": "NestJS Authentication Foundation - Phases 1-5",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "0.5.0",
-    "description": "Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing. Phase 5 management requests require explicit operator bootstrap of an existing active verified account. New catalog permissions grant nothing automatically. Management variables must target disposable identities/roles deliberately. See docs/phase-05.md."
+    "version": "0.5.1",
+    "description": "Complete implemented API collection. Read docs/WORKING-GUIDE.md first. Configure password/resetPassword/newPassword locally; no credentials or tokens are shipped. The collection works without an environment; an optional Local environment is supplied for input overrides. Runtime bearer/CSRF/session variables are stored at collection scope, while the Postman cookie jar holds refresh cookies. Mail tokens are intentionally obtained outside HTTP responses. Do not Run All blindly: verification/recovery require a mail-token checkpoint and some requests revoke sessions. The Health folder is directly runnable. After password change/reset, password is updated for the next Login. Scripts never print secrets. Clear sensitive local state before exporting or sharing. Phase 5 management requests require explicit operator bootstrap of an existing active verified account. New catalog permissions grant nothing automatically. Management variables must target disposable identities/roles deliberately. See docs/phase-05.md. Includes user/company CRUD with shared repositories, verified-account provisioning and safe archival."
   },
   "auth": {
     "type": "bearer",
@@ -149,6 +149,41 @@
     },
     {
       "key": "managedUserIds",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "companyName",
+      "value": "Postman company",
+      "type": "string"
+    },
+    {
+      "key": "managedUserEmail",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managedUserPassword",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managedFirstName",
+      "value": "Ada",
+      "type": "string"
+    },
+    {
+      "key": "managedLastName",
+      "value": "Lovelace",
+      "type": "string"
+    },
+    {
+      "key": "companyId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "managedUserId",
       "value": "",
       "type": "string"
     }
@@ -2543,6 +2578,442 @@
             }
           ],
           "response": []
+        }
+      ]
+    },
+    {
+      "name": "10 - User and company management",
+      "description": "Run explicitly: create company, create user, list/get/update, unlink via Update managed user, archive user, delete company. Creating a user queues verification; it never assigns administrative authority. Set new account inputs separately from your operator login. See docs/USER-COMPANY-MANAGEMENT.md.",
+      "item": [
+        {
+          "name": "List companies",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/companies?page=1&limit=20&sortBy=name&sortOrder=asc",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create company",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/companies",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{companyName}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"companyName\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}",
+                  "pm.request.body.update(JSON.stringify({\"name\":pm.variables.get(\"companyName\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===201){pm.collectionVariables.set('companyId',pm.response.json().data.id);}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get company",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/companies/{{companyId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"companyId\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update company",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/companies/{{companyId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"{{companyName}}\",\n  \"address\": \"Karachi\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"companyId\",\"companyName\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}",
+                  "pm.request.body.update(JSON.stringify({\"name\":pm.variables.get(\"companyName\"),\"address\":\"Karachi\"}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete company",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/companies/{{companyId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"companyId\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',()=>pm.response.to.have.status(204));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===204){pm.collectionVariables.unset('companyId');}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users?page=1&limit=20&sortBy=createdAt&sortOrder=desc",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create managed user",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/v1/users",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{managedUserEmail}}\",\n  \"password\": \"{{managedUserPassword}}\",\n  \"firstName\": \"{{managedFirstName}}\",\n  \"lastName\": \"{{managedLastName}}\",\n  \"companyId\": \"{{companyId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"managedUserEmail\",\"managedUserPassword\",\"managedFirstName\",\"managedLastName\",\"companyId\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}",
+                  "pm.request.body.update(JSON.stringify({\"email\":pm.variables.get(\"managedUserEmail\"),\"password\":pm.variables.get(\"managedUserPassword\"),\"firstName\":pm.variables.get(\"managedFirstName\"),\"lastName\":pm.variables.get(\"managedLastName\"),\"companyId\":pm.variables.get(\"companyId\")}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===201){const user=pm.response.json().data;pm.collectionVariables.set('managedUserId',user.id);pm.test('Unverified and no credentials',()=>{pm.expect(user.emailVerifiedAt).to.eql(null);pm.expect(user).not.to.have.property('passwordHash');pm.expect(user).not.to.have.property('password');});}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get managed user",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/v1/users/{{managedUserId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"managedUserId\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update managed user",
+          "request": {
+            "method": "PATCH",
+            "url": "{{baseUrl}}/api/v1/users/{{managedUserId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"{{managedFirstName}}\",\n  \"companyId\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"managedUserId\",\"managedFirstName\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}",
+                  "pm.request.body.update(JSON.stringify({\"firstName\":pm.variables.get(\"managedFirstName\"),\"companyId\":null}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===200){}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Archive managed user",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/v1/users/{{managedUserId}}",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{origin}}"
+              }
+            ]
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "for(const key of [\"accessToken\",\"managedUserId\"]){const value=pm.variables.get(key);if(typeof value!=='string'||!value.length){if(pm.execution&&typeof pm.execution.skipRequest==='function')pm.execution.skipRequest();throw new Error('Set '+key+' first. See docs/USER-COMPANY-MANAGEMENT.md');}}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',()=>pm.response.to.have.status(204));",
+                  "pm.test('Not cached',()=>pm.expect(pm.response.headers.get('Cache-Control')).to.eql('no-store'));",
+                  "if(pm.response.code===204){pm.collectionVariables.unset('managedUserId');}"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

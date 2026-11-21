@@ -1,5 +1,7 @@
 # Phase 5: dynamic authorization and scoped administration
 
+The subsequent [user/company management extension](USER-COMPANY-MANAGEMENT.md) adds CRUD, profile fields, archival and a fifth migration. Counts/layout below describe the original Phase 5 snapshot. Use the working guide and extension guide for current setup.
+
 Phase 5 adds database-driven role/permission evaluation, explicit access policies, management APIs, operator bootstrap and administrative lifecycle controls. No new schema migration is needed: the normalized roles, permissions, mapping tables and cycle-prevention trigger already exist. The development database still has four migrations.
 
 ## Decisions and module boundaries

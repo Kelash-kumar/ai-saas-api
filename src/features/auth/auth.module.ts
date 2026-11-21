@@ -25,6 +25,7 @@ import { AccessPipelineGuard } from './guards/access-pipeline.guard';
 @Module({
   imports: [JwtModule.register({}), NotificationsModule, AuthorizationModule],
   controllers: [AuthController, RecoveryController],
+  exports: [RegistrationService, PASSWORD_HASHER],
   providers: [
     ArgonPasswordHasher,
     { provide: PASSWORD_HASHER, useExisting: ArgonPasswordHasher },

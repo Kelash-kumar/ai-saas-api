@@ -1,3 +1,5 @@
+User and company CRUD is also implemented in NestJS. See the [management guide](docs/USER-COMPANY-MANAGEMENT.md) for the ten endpoints, shared repository/provisioning design, fifth migration and Postman walkthrough.
+
 # NestJS authentication foundation
 
 A reusable backend built incrementally. **Phases 1–5 are implemented:** infrastructure, PostgreSQL persistence, authentication/recovery, lifecycle/mail delivery, dynamic RBAC and scoped administrative management. Phase 6 operational hardening remains.
@@ -17,7 +19,7 @@ npm run db:migrate
 npm run start:dev
 ```
 
-The current workspace already has private keys, a separate running development PostgreSQL cluster on `127.0.0.1:55432` and all four migrations applied. The helper uses installed PostgreSQL 17 binaries and leaves existing services untouched. Keys are generated only when missing in the ignored `.env`.
+The current workspace already has private keys, a separate running development PostgreSQL cluster on `127.0.0.1:55432` and all five migrations applied. The helper uses installed PostgreSQL 17 binaries and leaves existing services untouched. Keys are generated only when missing in the ignored `.env`.
 
 Start delivery in another terminal:
 
@@ -70,7 +72,7 @@ npm run mail:status
 npm audit
 ```
 
-There are **140 tests**: 63 unit/infrastructure and 77 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
+There are **150 tests**: 63 unit/infrastructure and 87 real PostgreSQL tests, including dynamic authorization, escalation/race protection, administrative boundaries and all earlier auth/recovery/outbox/migration checks. CI provisions disposable PostgreSQL and test keys on Node 22/24; remote CI has not been executed here.
 
 `npm run check` needs configuration but no database connection for its infrastructure tests. `test:database` needs a disposable PostgreSQL server and CREATEDB-capable test role; it creates/drops only owned `foundation_test_<uuid>` databases and never resets the configured application database. Never point tests at production infrastructure.
 

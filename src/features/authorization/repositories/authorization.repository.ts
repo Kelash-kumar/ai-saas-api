@@ -110,7 +110,7 @@ export class AuthorizationRepository {
   async hasRecoveryManager(): Promise<boolean> {
     const rows: unknown = await this.manager.query(
       `WITH RECURSIVE subjects(id) AS (
-      SELECT id FROM users WHERE status='active' AND email_verified_at IS NOT NULL AND (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP)
+      SELECT id FROM users WHERE deleted_at IS NULL AND status='active' AND email_verified_at IS NOT NULL AND (locked_until IS NULL OR locked_until <= CURRENT_TIMESTAMP)
     ), expanded(user_id, role_id) AS (
       SELECT ur.user_id, ur.role_id FROM user_roles ur JOIN subjects u ON ur.user_id=u.id
       UNION SELECT held.user_id, edge.inherited_role_id FROM expanded held JOIN role_inheritance edge ON held.role_id=edge.role_id

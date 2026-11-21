@@ -18,6 +18,13 @@ export const systemPermissions = [
   'permissions.assign',
   'permissions.revoke',
   'users.read',
+  'users.create',
+  'users.update',
+  'users.delete',
+  'companies.read',
+  'companies.create',
+  'companies.update',
+  'companies.delete',
   'users.update_status',
   'users.unlock',
 ] as const;

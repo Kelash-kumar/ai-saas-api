@@ -1,6 +1,6 @@
 # Complete setup, run and API working guide
 
-This guide covers the application as implemented through Phase 5. It is a backend, not a frontend application. It includes authentication, recovery, self-service lifecycle, sessions, delivery, dynamic role/permission guards and scoped administrative management. See [Phase 5](phase-05.md) for policy semantics and the complete management endpoint reference.
+This guide covers the application as implemented through Phase 5. It is a backend, not a frontend application. It includes authentication, recovery, self-service lifecycle, sessions, delivery, dynamic role/permission guards and scoped administrative management, plus [user/company CRUD](USER-COMPANY-MANAGEMENT.md). See [Phase 5](phase-05.md) for policy semantics and the complete management endpoint reference.
 
 ## 1. What you need
 
@@ -13,7 +13,7 @@ This guide covers the application as implemented through Phase 5. It is a backen
 | API client      | Postman desktop, or Postman web with its Desktop Agent for local requests.                                |
 | SMTP account    | Optional for development; required to deliver external mail instead of private file capture.              |
 
-On the current machine the project is at `E:\nestjs-auth-foundation`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and four database migrations are already configured. The following instructions also explain a fresh checkout.
+On the current machine the project is at `E:\nestjs-auth-foundation`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and five database migrations are already configured. The following instructions also explain a fresh checkout.
 
 ## 2. Quick start on this Windows workspace
 
@@ -135,7 +135,7 @@ Edit `.env` from the project root, never a generated `dist` file. Restart API/wo
 
 Import these files through Postman's **Import** action:
 
-1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 44 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
+1. [NestJS-Auth-Foundation.postman_collection.json](../postman/NestJS-Auth-Foundation.postman_collection.json) — the complete collection, including 54 requests and scripted checks. If you previously imported Phase 4, import this updated JSON explicitly; an existing Postman workspace does not update automatically.
 2. [Local.postman_environment.json](../postman/Local.postman_environment.json) — optional local input environment.
 
 Select **NestJS Foundation - Local** if using the supplied environment. The collection also works without an environment: set its variables directly. Configure these input values locally:
@@ -273,6 +273,10 @@ npm run authorization:grant -- ada@example.com reports.view
 
 Keep your operator available while experimenting. Mutations cannot exceed the caller's current permissions; role delegation requires holding the role identity or `roles.delegate`. The service rejects changes that would remove the final eligible recovery manager. Catalog creation grants no authority, and bootstrap never grants future custom definitions automatically. A 403 can indicate missing permission or a delegation ceiling; a 409 can indicate duplicate identity or the final-manager safeguard. A hierarchy cycle returns 400. See [Phase 5](phase-05.md) for exact contracts.
 
+### J. User and company management
+
+The ten CRUD requests are in folder `10 - User and company management`. Rerun operator bootstrap explicitly to grant the new management permissions, then follow the [complete user/company walkthrough](USER-COMPANY-MANAGEMENT.md). That guide covers company assignment, managed user verification, archival and safe cleanup.
+
 ## 7. Endpoint reference
 
 | Method | Path                                | Required input/capability                    | Success                          |
@@ -328,7 +332,7 @@ npm run db:schema-check
 npm audit
 ```
 
-Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 140 tests: 63 unit/infrastructure and 77 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. Phase 5 uses the existing four migrations; it adds no migration.
+Configuration and local keys are needed even for infrastructure tests. Database tests require CREATEDB on a dedicated disposable server; they create fresh owned `foundation_test_<uuid>` databases and drop only those, never resetting the configured application database. The current application suite has 150 tests: 63 unit/infrastructure and 87 PostgreSQL tests. SMTP integration tests use a local capture server and do not send external email. The user/company extension adds the fifth migration; apply it before using this version.
 
 For compiled startup:
 

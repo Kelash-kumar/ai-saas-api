@@ -18,7 +18,12 @@ export function setupApp(app: NestExpressApplication): void {
   app.use((request: Request, response: Response, next: NextFunction) => {
     request.id = randomUUID();
     response.setHeader('X-Request-Id', request.id);
-    if (request.path.startsWith('/api/v1/auth')) response.setHeader('Cache-Control', 'no-store');
+    if (
+      ['/api/v1/auth', '/api/v1/users', '/api/v1/companies'].some((prefix) =>
+        request.path.startsWith(prefix),
+      )
+    )
+      response.setHeader('Cache-Control', 'no-store');
     next();
   });
   app.use(helmet());
@@ -41,9 +46,9 @@ export function setupApp(app: NestExpressApplication): void {
     const options = new DocumentBuilder()
       .setTitle('Authentication foundation')
       .setDescription(
-        'Phase 5: authentication, recovery, durable mail, dynamic RBAC and scoped administration. Permission changes apply on the next request. Success JSON uses { success, data }; lists use { data, meta }.',
+        'Phase 5 plus user/company management: authentication, recovery, durable mail, dynamic RBAC and scoped administration. Permission changes apply on the next request. Success JSON uses { success, data }; lists use { data, meta }.',
       )
-      .setVersion('0.5.0')
+      .setVersion('0.5.1')
       .addBearerAuth()
       .addCookieAuth(
         config.app.environment === 'production'

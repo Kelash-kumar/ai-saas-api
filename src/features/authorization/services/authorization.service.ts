@@ -1,6 +1,7 @@
 import { ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { UnitOfWork } from '../../../core/database/unit-of-work';
+import type { TransactionScope } from '../../../core/database/unit-of-work';
 import { AppLogger } from '../../../core/logging/app-logger.service';
 import { AuthorizationRepository } from '../repositories/authorization.repository';
 import { assertGrantScope, assertPermissionScope } from '../policies/grant.policy';
@@ -52,7 +53,11 @@ export class AuthorizationService {
     principal: Principal,
     required: readonly string[],
     userIds: string[],
-    work: (repository: AuthorizationRepository, actor: Authority) => Promise<T>,
+    work: (
+      repository: AuthorizationRepository,
+      actor: Authority,
+      scope: TransactionScope,
+    ) => Promise<T>,
   ): Promise<T> {
     const result = await this.work.run(async (scope) => {
       const repository = scope.get(AuthorizationRepository);
@@ -63,7 +68,7 @@ export class AuthorizationService {
       if (required.some((permission) => !actor.permissions.includes(permission)))
         throw new ForbiddenException('Insufficient permission');
       const hadRecovery = await repository.hasRecoveryManager();
-      const value = await work(repository, actor);
+      const value = await work(repository, actor, scope);
       if (hadRecovery && !(await repository.hasRecoveryManager()))
         throw new ConflictException('Change would remove the last eligible delegation manager');
       return value;

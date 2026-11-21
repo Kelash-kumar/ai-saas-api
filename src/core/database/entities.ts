@@ -1,4 +1,5 @@
 import { UserEntity } from '../../features/users/entities/user.entity';
+import { CompanyEntity } from '../../features/companies/entities/company.entity';
 import { RoleEntity } from '../../features/authorization/entities/role.entity';
 import { PermissionEntity } from '../../features/authorization/entities/permission.entity';
 import { UserRoleEntity } from '../../features/authorization/entities/user-role.entity';
@@ -14,6 +15,7 @@ import { AccountActivationTokenEntity } from '../../features/auth/entities/accou
 
 /** Explicit metadata registry; shared by runtime, migrations and tests, without business imports. */
 export const entities = [
+  CompanyEntity,
   UserEntity,
   RoleEntity,
   PermissionEntity,
