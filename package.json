@@ -7,9 +7,9 @@
     "node": ">=22.13 <23 || >=24.11"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/main.js",
-    "start:dev": "nodemon --watch src --ext ts --exec \"ts-node src/main.ts\"",
+    "build": "node init && tsc -p tsconfig.build.json",
+    "start": "node init && node dist/main.js",
+    "start:dev": "node init && nodemon --watch src --ext ts --exec \"ts-node src/main.ts\"",
     "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
     "test:unit": "jest --runInBand --testPathPattern=src",

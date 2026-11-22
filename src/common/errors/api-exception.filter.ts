@@ -19,7 +19,7 @@ export interface ApiError {
 @Catch()
 @Injectable()
 export class ApiExceptionFilter implements ExceptionFilter {
-  constructor(private readonly logger: AppLogger) {}
+  constructor(private readonly logger: AppLogger) { }
 
   catch(exception: unknown, host: ArgumentsHost): void {
     exception = mapDatabaseError(exception);
