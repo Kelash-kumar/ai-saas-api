@@ -1,8 +1,8 @@
 User and company CRUD is also implemented in NestJS. See the [management guide](docs/USER-COMPANY-MANAGEMENT.md) for the ten endpoints, shared repository/provisioning design, fifth migration and Postman walkthrough.
 
-# NestJS authentication foundation
+# AI SaaS API
 
-A reusable backend built incrementally. **Phases 1–5 are implemented:** infrastructure, PostgreSQL persistence, authentication/recovery, lifecycle/mail delivery, dynamic RBAC and scoped administrative management. Phase 6 operational hardening remains.
+The NestJS backend for the AI SaaS platform. Dynamic chatbot integration is planned. **Phases 1–5 are implemented:** infrastructure, PostgreSQL persistence, authentication/recovery, lifecycle/mail delivery, dynamic RBAC and scoped administrative management. Phase 6 operational hardening remains.
 
 Start with the [complete working guide](docs/WORKING-GUIDE.md). Import the [Postman collection](postman/NestJS-Auth-Foundation.postman_collection.json) and optional [Local environment](postman/Local.postman_environment.json) for the full API walkthrough.
 
@@ -11,7 +11,7 @@ Start with the [complete working guide](docs/WORKING-GUIDE.md). Import the [Post
 Use Node.js 22.13+ on the 22.x line or 24.11+, NestJS 11, TypeORM 1.1.3 and PostgreSQL 17.
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm ci --ignore-scripts
 npm run auth:keys
 npm run db:local
@@ -24,7 +24,7 @@ The current workspace already has private keys, a separate running development P
 Start delivery in another terminal:
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm run mail:worker
 # Or process at most one eligible message:
 npm run mail:once
@@ -84,7 +84,7 @@ The [roadmap](docs/roadmap.md) defines the remaining phases. Manage the isolated
 
 ## Unified Next.js admin integration
 
-Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
+Frontend: E:\ai-saas-dashboard, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
 
 Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
 

@@ -13,14 +13,14 @@ This guide covers the application as implemented through Phase 5. It is a backen
 | API client      | Postman desktop, or Postman web with its Desktop Agent for local requests.                                |
 | SMTP account    | Optional for development; required to deliver external mail instead of private file capture.              |
 
-On the current machine the project is at `E:\nestjs-auth-foundation`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and seven database migrations are already configured. The following instructions also explain a fresh checkout.
+On the current machine the project is at `E:\ai-saas-api`, PostgreSQL 17 binaries are installed, and a separate project-owned cluster runs on `127.0.0.1:55432`. Local `.env` keys and seven database migrations are already configured. The following instructions also explain a fresh checkout.
 
 ## 2. Quick start on this Windows workspace
 
 Open PowerShell in the project root:
 
 ```powershell
-Set-Location E:\nestjs-auth-foundation
+Set-Location E:\ai-saas-api
 node --version
 npm --version
 npm ci --ignore-scripts
@@ -36,7 +36,7 @@ npm run start:dev
 Leave the API terminal running. Open a second PowerShell terminal:
 
 ```powershell
-Set-Location E:\nestjs-auth-foundation
+Set-Location E:\ai-saas-api
 npm run mail:worker
 ```
 
@@ -130,7 +130,7 @@ Edit `.env` from the project root, never a generated `dist` file. Restart API/wo
 | `MAIL_TIMEOUT_MS`, `MAIL_LEASE_MS`                      | SMTP stage timeout and worker lease; defaults 5000 and 60000 ms. Lease must exceed the validated delivery budget.                               |
 | `MAIL_MAX_ATTEMPTS`, `MAIL_POLL_MS`                     | Durable attempt limit and worker polling; defaults 5 and 1000 ms.                                                                               |
 
-`MAIL_PUBLIC_URL` points to the frontend that will consume emailed token fragments and POST JSON to this API. The sibling Next.js application at E:\nestjs-auth-admin implements email verification and the shared dashboard. Use MAIL_PUBLIC_URL=http://localhost:3001 locally. Recovery endpoints remain available through Postman.
+`MAIL_PUBLIC_URL` points to the frontend that will consume emailed token fragments and POST JSON to this API. The sibling Next.js application at E:\ai-saas-dashboard implements email verification and the shared dashboard. Use MAIL_PUBLIC_URL=http://localhost:3001 locally. Recovery endpoints remain available through Postman.
 
 ## 5. Import Postman
 
@@ -387,7 +387,7 @@ Local verification uses Windows, installed PostgreSQL 17 and file/local SMTP cap
 
 ## Unified Next.js admin integration
 
-Frontend: E:\nestjs-auth-admin, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
+Frontend: E:\ai-saas-dashboard, http://localhost:3001/login. Run npm run dev in that repository after starting this API. One login offers Admin/User options and one shared dashboard uses actual roles/permissions. No public registration UI is provided.
 
 Run npm run db:seed after migrations. Development defaults are admin@example.com / Admin@123456789!. Existing passwords are preserved; existing regular identities are never promoted by the seed. Production requires explicit SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD and rejects default credentials. POST /api/v1/auth/admin/login shares the normal credential/session flow and additionally requires live admin.access. POST /api/v1/auth/login remains the regular-user entry point. Login choice never substitutes for permission checks.
 

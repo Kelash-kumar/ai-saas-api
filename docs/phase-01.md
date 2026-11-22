@@ -13,7 +13,7 @@ NestJS 11 is selected explicitly for ecosystem compatibility. The current NestJS
 Generated `dist`, `coverage` and dependency directories are omitted.
 
 ```text
-nestjs-auth-foundation/
+ai-saas-api/
 ├── .github/workflows/ci.yml
 ├── .env.example
 ├── .gitignore

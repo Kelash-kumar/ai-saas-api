@@ -161,7 +161,7 @@ Suspension/restoration notices are queued in the same transaction, with wording 
 ## Run and validate
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm ci --ignore-scripts
 npm run auth:keys
 npm run db:local

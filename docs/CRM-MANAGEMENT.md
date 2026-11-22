@@ -1,11 +1,11 @@
 # CRM management and email two-factor
 
-The Next.js application at E:\nestjs-auth-admin implements the supplied Admins/Roles/Users/Companies reference screens. Laravel is only a read-only reference; all changes are in the NestJS and Next.js repositories.
+The Next.js application at E:\ai-saas-dashboard implements the supplied Admins/Roles/Users/Companies reference screens. Laravel is only a read-only reference; all changes are in the NestJS and Next.js repositories.
 
 ## Upgrade and run
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm run db:local
 npm run db:migrate
 npm run db:schema-check
@@ -14,7 +14,7 @@ npm run build
 npm start
 ```
 
-Start the frontend in a second terminal (`cd E:\nestjs-auth-admin`, `npm run dev`, or `npm run build` and `npm start`). Open http://localhost:3001/admins. The existing development admin remains admin@example.com / Admin@123456789!. Existing passwords are preserved.
+Start the frontend in a second terminal (`cd E:\ai-saas-dashboard`, `npm run dev`, or `npm run build` and `npm start`). Open http://localhost:3001/admins. The existing development admin remains admin@example.com / Admin@123456789!. Existing passwords are preserved.
 
 Start `npm run mail:worker` in a third backend terminal. Development defaults to file delivery under `.local/mail`; inspect the newest matching `.eml` privately. Production requires SMTP configuration and a running worker. Do not enable email two-factor without operational delivery. SMS is deliberately unavailable until a provider is configured.
 

@@ -75,7 +75,7 @@ Cookie credentials never authenticate ordinary protected routes. Those require a
 The added packages are `@nestjs/jwt@11`, `argon2@0.45.2` and `cookie@1`. JWT 11 matches the existing CommonJS/Nest 11 toolchain. Use the lockfile:
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm ci --ignore-scripts
 npm run auth:keys
 npm run db:local
@@ -182,7 +182,7 @@ Phase 4 still needs password reset/change, lifecycle administration, broader loc
 ## Complete current layout
 
 ```text
-nestjs-auth-foundation/
+ai-saas-api/
 ├── .github
 │   └── workflows
 │       └── ci.yml

@@ -44,7 +44,7 @@ export function setupApp(app: NestExpressApplication): void {
 
   if (config.app.swaggerEnabled) {
     const options = new DocumentBuilder()
-      .setTitle('Authentication foundation')
+      .setTitle('AI SaaS API')
       .setDescription(
         'Phase 5 plus user/company management: authentication, recovery, durable mail, dynamic RBAC and scoped administration. Permission changes apply on the next request. Success JSON uses { success, data }; lists use { data, meta }.',
       )

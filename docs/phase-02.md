@@ -92,7 +92,7 @@ Installed dependencies: `npm install typeorm@1.1.3 pg dotenv --ignore-scripts` a
 Windows with installed PostgreSQL binaries:
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm ci --ignore-scripts
 npm run db:local
 npm run db:migrate
@@ -227,7 +227,7 @@ Common mistakes: enabling production synchronize, using a root repository inside
 ## Complete file layout
 
 ```text
-nestjs-auth-foundation/
+ai-saas-api/
 ├── .github
 │   └── workflows
 │       └── ci.yml

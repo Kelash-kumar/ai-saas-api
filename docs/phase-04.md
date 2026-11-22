@@ -81,7 +81,7 @@ Two forward migrations are included:
 The local development database has been migrated forward. Complete rollback/reapply is tested only in owned disposable databases, including schema matching and the actual partial-index predicate. Existing verification messages remain readable with the existing configured key.
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm ci --ignore-scripts
 npm run auth:keys
 npm run db:local
@@ -92,7 +92,7 @@ npm run start:dev
 In another terminal, start the separate delivery worker:
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm run mail:worker
 # Or process at most one eligible message:
 npm run mail:once
@@ -187,7 +187,7 @@ Common mistakes: returning account existence in recovery responses; unlocking on
 ## Complete current layout
 
 ```text
-nestjs-auth-foundation/
+ai-saas-api/
 ├── .github
 │   └── workflows
 │       └── ci.yml

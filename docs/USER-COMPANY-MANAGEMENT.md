@@ -1,6 +1,6 @@
 # NestJS user and company management
 
-This update is implemented in E:\nestjs-auth-foundation. The Laravel repository was used only as a reference for thin controllers, repository contracts, common persistence operations and resource projections. It adds to Phase 5; Phase 6 operational hardening is still separate. No Laravel framework, ORM or authentication code is introduced into NestJS.
+This update is implemented in E:\ai-saas-api. The Laravel repository was used only as a reference for thin controllers, repository contracts, common persistence operations and resource projections. It adds to Phase 5; Phase 6 operational hardening is still separate. No Laravel framework, ORM or authentication code is introduced into NestJS.
 
 ## Architecture and reduced repetition
 
@@ -19,7 +19,7 @@ One company has many users; each user has zero or one company. This is a busines
 Run from the NestJS project:
 
 ```powershell
-cd E:\nestjs-auth-foundation
+cd E:\ai-saas-api
 npm run db:local
 npm run db:migrate
 npm run db:status
