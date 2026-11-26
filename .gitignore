@@ -3,5 +3,3 @@ dist/
 coverage/
 !.env.example
 *.log
-.local/
-config.bat
